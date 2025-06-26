@@ -1,0 +1,16 @@
+export enum Resource {
+  USER = 'user',
+  VEHICLE = 'vehicle',
+  BOOKING = 'booking',
+  PAYMENT = 'payment',
+  COUPON = 'coupon',
+  REVIEW = 'review',
+  NOTIFICATION = 'notification',
+  LOCATION = 'location',
+  MAINTENANCE = 'maintenance',
+  SYSTEM = 'system',
+  ACCOUNT = 'account',
+  DASHBOARD = 'dashboard',
+  AUDIT_LOG = 'audit_log',
+  SETTING = 'setting',
+}

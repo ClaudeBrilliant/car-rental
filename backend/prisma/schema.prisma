@@ -1,0 +1,380 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+  CUSTOMER
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  FACEBOOK
+  PHONE
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  phone           String?       @unique
+  password        String?
+  firstName       String
+  lastName        String
+  avatar          String?
+  profileImageId  String?
+  profileImageUrl String?
+  role            UserRole      @default(CUSTOMER)
+  authProvider    AuthProvider? @default(EMAIL)
+  providerId      String?
+
+  
+
+  // Password Reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
+  // Email Verification
+  emailVerifyToken  String?
+  emailVerifyExpiry DateTime?
+
+  // Profile
+  dateOfBirth    DateTime?
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  zipCode        String?
+  drivingLicense String?
+  licenseExpiry  DateTime?
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+
+  // Relations
+  bookings      Booking[]
+  reviews       Review[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// ================================
+// VEHICLE MANAGEMENT
+// ================================
+
+enum VehicleCategory {
+  ECONOMY
+  COMPACT
+  SEDAN
+  SUV
+  LUXURY
+  CONVERTIBLE
+  MINIVAN
+  TRUCK
+  ELECTRIC
+  HYBRID
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  CVT
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+  CNG
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  RETIRED
+}
+
+model Vehicle {
+  id              String           @id @default(cuid())
+  make            String
+  model           String
+  year            Int
+  color           String
+  licensePlate    String           @unique
+  vin             String?          @unique
+  category        VehicleCategory
+  transmission    TransmissionType
+  fuelType        FuelType
+  seatingCapacity Int
+  doors           Int
+  mileage         Float?
+
+  // Pricing
+  pricePerHour Decimal @db.Decimal(10, 2)
+  pricePerDay  Decimal @db.Decimal(10, 2)
+
+  // Features
+  hasAC        Boolean @default(false)
+  hasGPS       Boolean @default(false)
+  hasBluetooth Boolean @default(false)
+  hasWifi      Boolean @default(false)
+  hasUSB       Boolean @default(false)
+  hasSunroof   Boolean @default(false)
+
+  // Status & Location
+  status          VehicleStatus @default(AVAILABLE)
+  currentLocation String?
+
+  // Images
+  images VehicleImage[]
+
+  // Maintenance
+  lastServiceDate DateTime?
+  nextServiceDate DateTime?
+  insuranceExpiry DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  bookings           Booking[]
+  reviews            Review[]
+  maintenanceRecords MaintenanceRecord[]
+
+  @@map("vehicles")
+}
+
+model VehicleImage {
+  id        String   @id @default(cuid())
+  vehicleId String
+  imageUrl  String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_images")
+}
+
+model MaintenanceRecord {
+  id          String    @id @default(cuid())
+  vehicleId   String
+  description String
+  cost        Decimal   @db.Decimal(10, 2)
+  serviceDate DateTime
+  nextService DateTime?
+  createdAt   DateTime  @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_records")
+}
+
+// ================================
+// BOOKING & RESERVATION
+// ================================
+
+enum BookingStatus {
+  PENDING // Awaiting admin/agent approval
+  APPROVED // Approved by admin/agent
+  REJECTED // Rejected by admin/agent
+  ACTIVE // Customer has picked up the vehicle
+  COMPLETED // Rental completed and vehicle returned
+  CANCELLED // Cancelled by customer or admin
+}
+
+model Booking {
+  id            String @id @default(cuid())
+  bookingNumber String @unique @default(cuid())
+  userId        String
+  vehicleId     String
+
+  // Booking Details
+  startDate     DateTime
+  endDate       DateTime
+  startLocation String
+  endLocation   String?
+
+  // Pricing
+  totalDays       Int
+  estimatedAmount Decimal @db.Decimal(10, 2)
+
+  // Request Status
+  status BookingStatus @default(PENDING)
+
+  // Admin Actions
+  reviewedBy      String? // Admin/Agent who reviewed
+  reviewedAt      DateTime? // When it was reviewed
+  rejectionReason String? // Reason for rejection if applicable
+  adminNotes      String? // Internal notes by admin
+
+  // Customer Info
+  customerNotes String? // Special requests from customer
+  phoneNumber   String? // Contact number for this booking
+
+  // Pickup/Return Details
+  pickupTime   DateTime? // Scheduled pickup time
+  returnTime   DateTime? // Scheduled return time
+  actualPickup DateTime? // Actual pickup time
+  actualReturn DateTime? // Actual return time
+
+  // Vehicle Condition
+  pickupCondition String? // Vehicle condition at pickup
+  returnCondition String? // Vehicle condition at return
+  damageNotes     String? // Any damage reported
+
+  // Cancellation
+  cancellationReason String?
+  cancelledAt        DateTime?
+  cancelledBy        String? // User ID who cancelled
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+
+  @@map("bookings")
+}
+
+// ================================
+// REVIEWS & RATINGS
+// ================================
+
+model Review {
+  id        String  @id @default(cuid())
+  userId    String
+  vehicleId String
+  bookingId String? @unique
+
+  rating  Int // 1-5 stars
+  title   String?
+  comment String?
+
+  // Admin Response
+  adminResponse String?
+  respondedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+
+  @@map("reviews")
+}
+
+// ================================
+// LOCATION MANAGEMENT
+// ================================
+
+model Location {
+  id        String @id @default(cuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  country   String
+  zipCode   String
+  latitude  Float?
+  longitude Float?
+
+  // Operating Hours
+  openingTime String?
+  closingTime String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("locations")
+}
+
+// ================================
+// NOTIFICATION SYSTEM
+// ================================
+
+enum NotificationType {
+  BOOKING_SUBMITTED // Customer submitted a booking request
+  BOOKING_APPROVED // Admin approved the booking
+  BOOKING_REJECTED // Admin rejected the booking
+  BOOKING_CANCELLED // Booking was cancelled
+  PICKUP_REMINDER // Reminder for vehicle pickup
+  RETURN_REMINDER // Reminder for vehicle return
+  VEHICLE_READY // Vehicle is ready for pickup
+  MAINTENANCE_DUE // Vehicle maintenance due
+  SYSTEM_ALERT // General system alerts
+}
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  type    NotificationType
+  title   String
+  message String
+  isRead  Boolean          @default(false)
+  data    Json? // Additional data for the notification
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ================================
+// SYSTEM SETTINGS
+// ================================
+
+model SystemSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// ================================
+// AUDIT LOG
+// ================================
+
+model AuditLog {
+  id        String  @id @default(cuid())
+  userId    String?
+  action    String // CREATE, UPDATE, DELETE, LOGIN, etc.
+  entity    String // User, Vehicle, Booking, etc.
+  entityId  String?
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
