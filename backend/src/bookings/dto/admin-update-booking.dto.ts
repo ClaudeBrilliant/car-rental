@@ -1,5 +1,5 @@
+import { BookingStatus } from '@prisma/client';
 import { IsOptional, IsEnum, IsString, IsDateString } from 'class-validator';
-import { BookingStatus } from 'generated/prisma';
 
 export class AdminUpdateBookingDto {
   @IsOptional()
