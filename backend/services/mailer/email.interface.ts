@@ -18,7 +18,7 @@ export interface PasswordResetEmailContext extends EmailContext {
 }
 
 // Order Confirmation Email
-export interface OrderConfirmationEmailContext extends EmailContext {
+export interface HireConfirmationEmailContext extends EmailContext {
   orderId: string;
   orderDate: string; // ISO string or formatted date
   orderTotal: string; // e.g., "$49.99"

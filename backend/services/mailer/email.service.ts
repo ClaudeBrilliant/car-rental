@@ -10,10 +10,10 @@ import { ConfigService } from '@nestjs/config';
 import {
   WelcomeEmailContext,
   PasswordResetEmailContext,
-  OrderConfirmationEmailContext,
   ShippingNotificationEmailContext,
   PromotionalEmailContext,
   EmailContext,
+  HireConfirmationEmailContext,
 } from './email.interface';
 
 @Injectable()
@@ -27,11 +27,11 @@ export class EmailService {
 
   private getGlobalContext(extra: Record<string, any> = {}) {
     return {
-      appName: this.configService.get<string>('APP_NAME') || 'Shopie',
+      appName: this.configService.get<string>('APP_NAME') || 'Clyde Hire',
       year: new Date().getFullYear(),
       supportEmail:
         (this.configService.get<string>('SUPPORT_EMAIL') as string) ||
-        'support@shopie.com',
+        'support@clydehire.com',
       ...extra,
     };
   }
@@ -64,7 +64,7 @@ export class EmailService {
   async sendWelcomeEmail(email: string, context: WelcomeEmailContext) {
     await this.sendEmail(
       email,
-      `Welcome to Shopie, ${context.name}!`,
+      `Welcome to Clyde-Hire, ${context.name}!`,
       'emails/welcome',
       context,
     );
@@ -76,15 +76,15 @@ export class EmailService {
   ) {
     await this.sendEmail(
       email,
-      'Reset Your Password - Shopie',
+      'Reset Your Password - Clyde-Hire',
       'emails/password-reset',
       context,
     );
   }
 
-  async sendOrderConfirmation(
+  async sendHireConfirmation(
     email: string,
-    context: OrderConfirmationEmailContext,
+    context: HireConfirmationEmailContext,
   ) {
     await this.sendEmail(
       email,
