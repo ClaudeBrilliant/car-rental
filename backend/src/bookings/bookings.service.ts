@@ -14,8 +14,8 @@ import { AdminUpdateBookingDto } from './dto/admin-update-booking.dto';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { Decimal } from 'generated/prisma/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Decimal } from '@prisma/client/runtime/library';
 @Injectable()
 export class BookingService {
   constructor(private readonly prisma: PrismaService) {}
