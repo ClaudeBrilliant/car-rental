@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/require-await */
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -19,6 +17,7 @@ import { PermissionsGuard } from './guards/permission.guard';
 import { PermissionsMiddleware } from './middleware/permissions.middleware';
 import { EmailModule } from 'services/mailer/email.module';
 import { UsersService } from 'src/users/users.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   imports: [
@@ -47,6 +46,7 @@ import { UsersService } from 'src/users/users.service';
     JwtAuthGuard,
     RolesGuard,
     PermissionsGuard,
+    PrismaService,
   ],
   exports: [
     AuthService,
