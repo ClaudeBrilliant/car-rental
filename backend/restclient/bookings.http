@@ -1,0 +1,132 @@
+@BASE_URL = http://localhost:3000
+@token = your-jwt-token-here
+### Create booking
+POST {{BASE_URL}}/bookings
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "userId": "USER_ID_OPTIONAL",
+  "vehicleId": "VEHICLE_ID",
+  "startDate": "2025-07-01T10:00:00Z",
+  "endDate": "2025-07-05T10:00:00Z"
+}
+
+###
+
+### Get all bookings (Admin)
+GET {{BASE_URL}}/bookings
+Authorization: Bearer {token}
+
+###
+
+### Get my bookings
+GET {{BASE_URL}}/bookings/my-bookings
+Authorization: Bearer {token}
+
+###
+
+### Get bookings by user ID (Admin)
+GET {{BASE_URL}}/bookings/user/USER_ID
+Authorization: Bearer {token}
+
+###
+
+### Get bookings by vehicle ID (Admin or Agent)
+GET {{BASE_URL}}/bookings/vehicle/VEHICLE_ID
+Authorization: Bearer {token}
+
+###
+
+### Get bookings by status (Admin or Agent)
+GET {{BASE_URL}}/bookings/status/PENDING
+Authorization: Bearer {token}
+
+###
+
+### Get pending bookings
+GET {{BASE_URL}}/bookings/pending
+Authorization: Bearer {token}
+
+###
+
+### Get active bookings
+GET {{BASE_URL}}/bookings/active
+Authorization: Bearer {token}
+
+###
+
+### Get booking by ID
+GET {{BASE_URL}}/bookings/BOOKING_ID
+Authorization: Bearer {token}
+
+###
+
+### User update booking
+PATCH {{BASE_URL}}/bookings/BOOKING_ID
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "startDate": "2025-07-02T10:00:00Z"
+}
+
+###
+
+### Admin update booking
+PATCH {{BASE_URL}}/bookings/BOOKING_ID/admin-update
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "status": "APPROVED",
+  "note": "Manually approved"
+}
+
+###
+
+### Approve booking
+PATCH {{BASE_URL}}/bookings/BOOKING_ID/approve
+Authorization: Bearer {token}
+
+###
+
+### Reject booking
+PATCH {{BASE_URL}}/bookings/BOOKING_ID/reject
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "rejectionReason": "Invalid license"
+}
+
+###
+
+### Confirm booking
+PATCH {{BASE_URL}}/bookings/BOOKING_ID/confirm
+Authorization: Bearer {token}
+
+###
+
+### Mark as picked up
+PATCH {{BASE_URL}}/bookings/BOOKING_ID/pickup
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "pickupCondition": "Clean and full tank",
+  "actualPickup": "2025-07-01T10:00:00Z"
+}
+
+###
+
+### Mark as returned
+PATCH {{BASE_URL}}/bookings/BOOKING_ID/return
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "returnCondition": "Scratches on left door",
+  "damageNotes": "Minor dent",
+  "actualReturn": "2025-07-05T10:00:00Z"
+}

@@ -1,0 +1,38 @@
+@BASE_URL = http://localhost:3000
+@token = your-jwt-token-here
+### Create a review
+POST {{BASE_URL}}/reviews
+Content-Type: application/json
+
+{
+  "userId": "USER_ID",
+  "vehicleId": "VEHICLE_ID",
+  "rating": 4,
+  "comment": "Clean car and smooth process."
+}
+
+###
+
+### Get all reviews
+GET {{BASE_URL}}/reviews
+
+###
+
+### Get reviews by user ID
+GET {{BASE_URL}}/reviews/user/USER_ID
+
+###
+
+### Respond to a review
+PATCH {{BASE_URL}}/reviews/respond
+Content-Type: application/json
+
+{
+  "reviewId": "REVIEW_ID",
+  "response": "Thank you for your feedback!"
+}
+
+###
+
+### Delete a review
+DELETE {{BASE_URL}}/reviews/REVIEW_ID

@@ -1,0 +1,35 @@
+@BASE_URL = http://localhost:3000
+@token = your-jwt-token-here
+### Create notification
+POST {{BASE_URL}}/notifications
+Content-Type: application/json
+
+{
+  "userId": "USER_ID",
+  "title": "Booking Approved",
+  "message": "Your booking #12345 has been approved.",
+  "type": "BOOKING",   // Optional, e.g., BOOKING, ALERT, REMINDER
+  "meta": {
+    "bookingId": "12345"
+  }
+}
+
+###
+
+### Get all notifications for a user
+GET {{BASE_URL}}/notifications/user/USER_ID
+
+###
+
+### Mark a single notification as read
+PATCH {{BASE_URL}}/notifications/read/NOTIFICATION_ID
+
+###
+
+### Mark all notifications as read for a user
+PATCH {{BASE_URL}}/notifications/read-all/USER_ID
+
+###
+
+### Delete a notification
+DELETE {{BASE_URL}}/notifications/NOTIFICATION_ID

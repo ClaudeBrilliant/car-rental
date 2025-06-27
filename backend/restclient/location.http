@@ -1,0 +1,46 @@
+@BASE_URL = http://localhost:3000
+@token = your-jwt-token-here
+### Create location
+POST {{BASE_URL}}/locations
+Content-Type: application/json
+
+{
+  "name": "Downtown Branch",
+  "address": "123 Main Street",
+  "city": "Nairobi",
+  "state": "Nairobi",
+  "country": "Kenya",
+  "zipCode": "00100",
+  "latitude": -1.2921,
+  "longitude": 36.8219,
+  "openingTime": "08:00",
+  "closingTime": "18:00",
+  "isActive": true
+}
+
+###
+
+### Get all locations
+GET {{BASE_URL}}/locations
+
+###
+
+### Get single location by ID
+GET {{BASE_URL}}/locations/LOCATION_ID
+
+###
+
+### Update location
+PATCH {{BASE_URL}}/locations/LOCATION_ID
+Content-Type: application/json
+
+{
+  "name": "Downtown Branch Updated",
+  "city": "Nairobi West",
+  "isActive": false
+}
+
+###
+
+### Delete location
+DELETE {{BASE_URL}}/locations/LOCATION_ID

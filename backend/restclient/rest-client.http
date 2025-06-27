@@ -1,0 +1,134 @@
+# Users API REST Client Calls
+# Replace {{baseUrl}} with your actual API base URL (e.g., http://localhost:3000/api)
+# Replace {{token}} with your actual JWT token
+
+@baseUrl = http://localhost:3000
+@token = your-jwt-token-here
+
+### Variables
+@userId = 550e8400-e29b-41d4-a716-446655440000
+@email = user@example.com
+
+###############################################################################
+# 1. CREATE USER
+###############################################################################
+POST {{baseUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "password": "SecurePass123!",
+  "role": "ADMIN",
+  "phone": "+1234567890",
+  "profileImageUrl": "https://example.com/avatar.jpg"
+}
+
+###############################################################################
+# 2. GET ALL USERS (with pagination and filtering)
+###############################################################################
+GET {{baseUrl}}/users?page=1&limit=10&search=john&role=CUSTOMER
+Authorization: Bearer {{token}}
+
+###############################################################################
+# 3. GET ALL CUSTOMERS
+###############################################################################
+GET {{baseUrl}}/users/customers
+Authorization: Bearer {{token}}
+
+###############################################################################
+# 4. GET ALL ADMINS
+###############################################################################
+GET {{baseUrl}}/users/admins
+Authorization: Bearer {{token}}
+
+###############################################################################
+# 5. GET CURRENT USER PROFILE
+###############################################################################
+GET {{baseUrl}}/users/profile
+Authorization: Bearer {{token}}
+
+###############################################################################
+# 6. UPDATE CURRENT USER PROFILE
+###############################################################################
+PATCH {{baseUrl}}/users/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "John Updated",
+  "lastName": "Doe Updated",
+  "email": "john.updated@example.com",
+  "phone": "+1234567891"
+}
+
+###############################################################################
+# 7. GET USER BY EMAIL
+###############################################################################
+GET {{baseUrl}}/users/email/{{email}}
+Authorization: Bearer {{token}}
+
+###############################################################################
+# 8. GET USER BY ID
+###############################################################################
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+###############################################################################
+# 9. UPDATE USER BY ID (Admin only)
+###############################################################################
+PATCH {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Admin Updated",
+  "lastName": "User",
+  "email": "admin.updated@example.com",
+  "role": "ADMIN",
+  "phone": "+1234567892"
+}
+
+###############################################################################
+# 10. CHANGE PASSWORD
+###############################################################################
+PATCH {{baseUrl}}/users/profile/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "CurrentPass123!",
+  "newPassword": "NewSecurePass123!",
+  "confirmPassword": "NewSecurePass123!"
+}
+
+###############################################################################
+# 11. RESET PASSWORD
+###############################################################################
+POST {{baseUrl}}/users/reset-password
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "newPassword": "ResetPass123!"
+}
+
+###############################################################################
+# 12. UPDATE PROFILE IMAGE
+###############################################################################
+PATCH {{baseUrl}}/users/{{userId}}/profile-image
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "profileImageId": "img_123456789",
+  "profileImageUrl": "https://example.com/new-avatar.jpg"
+}
+
+###############################################################################
+# 13. DELETE USER (Admin only)
+###############################################################################
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}

@@ -1,0 +1,70 @@
+@baseUrl = http://localhost:3000
+
+###############################################################################
+# AUTHENTICATION ROUTES
+###############################################################################
+
+### 1. REGISTER NEW USER (Public - No Auth Required)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe", 
+  "email": "john.doe11610@example.com",
+  "password": "SecurePass123!",
+  "phone": "+12349605890"
+}
+
+### 2. LOGIN (Public - No Auth Required)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "SecurePass123!"
+}
+
+### Extract token from login response
+@token = {{login.response.body.access_token}}
+
+### 3. CHECK AUTHENTICATION STATUS
+GET {{baseUrl}}/auth/check
+Authorization: Bearer {{token}}
+
+### 4. REFRESH TOKEN
+POST {{baseUrl}}/auth/refresh
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 5. LOGOUT
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 6. CHANGE PASSWORD
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SecurePass123!",
+  "newPassword": "NewSecurePass456!"
+}
+
+### 7. FORGOT PASSWORD (Public - No Auth Required)
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com"
+}
+
+### 8. VALIDATE TOKEN (Public - No Auth Required)
+POST {{baseUrl}}/auth/validate-token
+Content-Type: application/json
+
+{
+  "token": "{{token}}"
+}
