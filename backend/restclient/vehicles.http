@@ -1,0 +1,331 @@
+### Vehicle Management API - REST Client Requests
+
+# Base URL
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Variables for testing
+@vehicleId = {{createVehicle.response.body.id}}
+@imageId = {{addImage.response.body.id}}
+@recordId = {{addMaintenanceRecord.response.body.id}}
+
+####################
+# VEHICLE CRUD OPERATIONS
+####################
+
+### Create a new vehicle
+# @name createVehicle
+POST {{baseUrl}}/vehicles
+Content-Type: {{contentType}}
+
+{
+  "make": "Toyota",
+  "model": "Camry",
+  "year": 2023,
+  "color": "Silver",
+  "licensePlate": "ABC-123",
+  "vin": "1HGCM82633A004352",
+  "category": "SEDAN",
+  "transmission": "AUTOMATIC",
+  "fuelType": "PETROL",
+  "seatingCapacity": 5,
+  "doors": 4,
+  "mileage": 15000,
+  "pricePerHour": 12.50,
+  "pricePerDay": 89.99,
+  "hasAC": true,
+  "hasGPS": true,
+  "hasBluetooth": true,
+  "hasWifi": false,
+  "hasUSB": true,
+  "hasSunroof": false,
+  "status": "AVAILABLE",
+  "currentLocation": "Downtown Parking Lot A",
+  "lastServiceDate": "2024-01-15T00:00:00.000Z",
+  "nextServiceDate": "2024-07-15T00:00:00.000Z",
+  "insuranceExpiry": "2024-12-31T00:00:00.000Z"
+}
+
+### Get all vehicles with pagination
+GET {{baseUrl}}/vehicles?page=1&limit=10
+
+### Get all vehicles with search
+GET {{baseUrl}}/vehicles?search=Toyota&page=1&limit=5
+
+### Get vehicles with filters
+GET {{baseUrl}}/vehicles?category=SEDAN&status=AVAILABLE&fuelType=PETROL&transmission=AUTOMATIC
+
+### Get vehicles with price range
+GET {{baseUrl}}/vehicles?minPrice=10&maxPrice=100&page=1&limit=10
+
+### Get available vehicles only
+GET {{baseUrl}}/vehicles/available?page=1&limit=10
+
+### Get vehicles by category
+GET {{baseUrl}}/vehicles/category/SEDAN?page=1&limit=5
+
+### Get specific vehicle by ID
+GET {{baseUrl}}/vehicles/{{vehicleId}}
+
+### Update vehicle
+PATCH {{baseUrl}}/vehicles/{{vehicleId}}
+Content-Type: {{contentType}}
+
+{
+  "pricePerHour": 15.00,
+  "pricePerDay": 99.99,
+  "status": "MAINTENANCE",
+  "currentLocation": "Service Center B",
+  "mileage": 16500
+}
+
+### Delete vehicle
+DELETE {{baseUrl}}/vehicles/{{vehicleId}}
+
+####################
+# VEHICLE IMAGES
+####################
+
+### Add image to vehicle
+# @name addImage
+POST {{baseUrl}}/vehicles/images
+Content-Type: {{contentType}}
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "imageUrl": "https://example.com/images/toyota-camry-front.jpg",
+  "isPrimary": true
+}
+
+### Add another image (not primary)
+POST {{baseUrl}}/vehicles/images
+Content-Type: {{contentType}}
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "imageUrl": "https://example.com/images/toyota-camry-interior.jpg",
+  "isPrimary": false
+}
+
+### Set image as primary
+PATCH {{baseUrl}}/vehicles/images/{{imageId}}/primary
+
+### Remove vehicle image
+DELETE {{baseUrl}}/vehicles/images/{{imageId}}
+
+####################
+# MAINTENANCE RECORDS
+####################
+
+### Add maintenance record
+# @name addMaintenanceRecord
+POST {{baseUrl}}/vehicles/maintenance
+Content-Type: {{contentType}}
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "description": "Regular oil change and tire rotation",
+  "cost": 89.50,
+  "serviceDate": "2024-06-15T00:00:00.000Z",
+  "nextService": "2024-09-15T00:00:00.000Z"
+}
+
+### Get maintenance records for vehicle
+GET {{baseUrl}}/vehicles/{{vehicleId}}/maintenance
+
+### Update maintenance record
+PATCH {{baseUrl}}/vehicles/maintenance/{{recordId}}
+Content-Type: {{contentType}}
+
+{
+  "description": "Regular oil change, tire rotation, and brake inspection",
+  "cost": 125.75
+}
+
+### Delete maintenance record
+DELETE {{baseUrl}}/vehicles/maintenance/{{recordId}}
+
+####################
+# SAMPLE TEST DATA CREATION
+####################
+
+### Create SUV vehicle
+POST {{baseUrl}}/vehicles
+Content-Type: {{contentType}}
+
+{
+  "make": "Honda",
+  "model": "CR-V",
+  "year": 2022,
+  "color": "Black",
+  "licensePlate": "XYZ-789",
+  "vin": "2HGFC2F59MH123456",
+  "category": "SUV",
+  "transmission": "CVT",
+  "fuelType": "PETROL",
+  "seatingCapacity": 5,
+  "doors": 4,
+  "mileage": 22000,
+  "pricePerHour": 18.00,
+  "pricePerDay": 129.99,
+  "hasAC": true,
+  "hasGPS": true,
+  "hasBluetooth": true,
+  "hasWifi": true,
+  "hasUSB": true,
+  "hasSunroof": true,
+  "status": "AVAILABLE",
+  "currentLocation": "Airport Parking"
+}
+
+### Create Electric vehicle
+POST {{baseUrl}}/vehicles
+Content-Type: {{contentType}}
+
+{
+  "make": "Tesla",
+  "model": "Model 3",
+  "year": 2024,
+  "color": "White",
+  "licensePlate": "EV-001",
+  "vin": "5YJ3E1EA4KF123456",
+  "category": "SEDAN",
+  "transmission": "AUTOMATIC",
+  "fuelType": "ELECTRIC",
+  "seatingCapacity": 5,
+  "doors": 4,
+  "mileage": 5000,
+  "pricePerHour": 25.00,
+  "pricePerDay": 189.99,
+  "hasAC": true,
+  "hasGPS": true,
+  "hasBluetooth": true,
+  "hasWifi": true,
+  "hasUSB": true,
+  "hasSunroof": true,
+  "status": "AVAILABLE",
+  "currentLocation": "Electric Vehicle Station"
+}
+
+### Create Truck
+POST {{baseUrl}}/vehicles
+Content-Type: {{contentType}}
+
+{
+  "make": "Ford",
+  "model": "F-150",
+  "year": 2023,
+  "color": "Blue",
+  "licensePlate": "TRK-456",
+  "vin": "1FTFW1E54NFC12345",
+  "category": "TRUCK",
+  "transmission": "AUTOMATIC",
+  "fuelType": "PETROL",
+  "seatingCapacity": 5,
+  "doors": 4,
+  "mileage": 12000,
+  "pricePerHour": 22.00,
+  "pricePerDay": 159.99,
+  "hasAC": true,
+  "hasGPS": false,
+  "hasBluetooth": true,
+  "hasWifi": false,
+  "hasUSB": true,
+  "hasSunroof": false,
+  "status": "RENTED",
+  "currentLocation": "Construction Site A"
+}
+
+####################
+# ADVANCED QUERIES
+####################
+
+### Get all electric vehicles
+GET {{baseUrl}}/vehicles?fuelType=ELECTRIC
+
+### Get available SUVs under $20/hour
+GET {{baseUrl}}/vehicles?category=SUV&status=AVAILABLE&maxPrice=20
+
+### Search for Honda vehicles
+GET {{baseUrl}}/vehicles?search=Honda
+
+### Get vehicles with WiFi
+GET {{baseUrl}}/vehicles?search=wifi
+
+### Get all vehicles in maintenance
+GET {{baseUrl}}/vehicles?status=MAINTENANCE
+
+### Get vehicles by multiple categories (using separate requests)
+GET {{baseUrl}}/vehicles/category/SUV
+###
+GET {{baseUrl}}/vehicles/category/TRUCK
+
+####################
+# BULK OPERATIONS TEST
+####################
+
+### Get paginated results - Page 1
+GET {{baseUrl}}/vehicles?page=1&limit=2
+
+### Get paginated results - Page 2  
+GET {{baseUrl}}/vehicles?page=2&limit=2
+
+### Get all available vehicles with pagination
+GET {{baseUrl}}/vehicles/available?page=1&limit=5
+
+####################
+# ERROR TESTING
+####################
+
+### Try to get non-existent vehicle
+GET {{baseUrl}}/vehicles/00000000-0000-0000-0000-000000000000
+
+### Try to create vehicle with duplicate license plate
+POST {{baseUrl}}/vehicles
+Content-Type: {{contentType}}
+
+{
+  "make": "Toyota",
+  "model": "Prius",
+  "year": 2023,
+  "color": "Green",
+  "licensePlate": "ABC-123",
+  "category": "SEDAN",
+  "transmission": "AUTOMATIC",
+  "fuelType": "HYBRID",
+  "seatingCapacity": 5,
+  "doors": 4,
+  "pricePerHour": 14.00,
+  "pricePerDay": 99.99,
+  "hasAC": true,
+  "hasGPS": true,
+  "hasBluetooth": true,
+  "hasWifi": false,
+  "hasUSB": true,
+  "hasSunroof": false
+}
+
+### Try to create vehicle with invalid data
+POST {{baseUrl}}/vehicles
+Content-Type: {{contentType}}
+
+{
+  "make": "",
+  "model": "Test",
+  "year": 1800,
+  "color": "Red",
+  "licensePlate": "",
+  "category": "INVALID_CATEGORY",
+  "transmission": "MANUAL",
+  "fuelType": "PETROL",
+  "seatingCapacity": -1,
+  "doors": 10,
+  "pricePerHour": -5,
+  "pricePerDay": -10,
+  "hasAC": true,
+  "hasGPS": true,
+  "hasBluetooth": true,
+  "hasWifi": false,
+  "hasUSB": true,
+  "hasSunroof": false
+}
