@@ -16,7 +16,6 @@ import {
   Request,
   UnauthorizedException,
 } from '@nestjs/common';
-import { BookingStatus, UserRole } from '@prisma/client';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -24,6 +23,7 @@ import { BookingService } from './bookings.service';
 import { AdminUpdateBookingDto } from './dto/admin-update-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
+import { BookingStatus, UserRole } from '@prisma/client';
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
