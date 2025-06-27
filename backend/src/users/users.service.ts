@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
@@ -15,21 +12,21 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserRole } from '@prisma/client';
-import { getPrismaClient } from 'src/config/prisma.config';
-
 import { ChangePasswordDto } from 'src/auth/dto/change-password.dto';
 import { CreateUserDto, UserResponseDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
+  constructor(private readonly prisma: PrismaService) {}
   private readonly logger = new Logger(UsersService.name);
-  private prisma = getPrismaClient();
   private readonly saltRounds = parseInt(
     process.env.BCRYPT_SALT_ROUNDS ?? '12',
   );
   login: any;
+  getUserWithPassword: any;
 
   async createUser(data: CreateUserDto): Promise<UserResponseDto> {
   this.logger.log(`Creating user with email: ${data.email}`);
@@ -50,15 +47,15 @@ export class UsersService {
     }
 
     // Validate password strength (password is required in DTO)
-    this.validatePassword(data.password);
+    this.validatePassword(data.password!);
     
     // Hash the password
-    const hashedPassword = await bcrypt.hash(data.password, this.saltRounds);
+    const hashedPassword = await bcrypt.hash(data.password!, this.saltRounds);
 
     const user = await this.prisma.user.create({
       data: {
-        firstName: data.firstName?.trim(),
-        lastName: data.lastName?.trim(),
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
         email: data.email.toLowerCase().trim(),
         password: hashedPassword,
         role: data.role || UserRole.CUSTOMER,
@@ -67,7 +64,7 @@ export class UsersService {
         profileImageId: data.profileImageId,
         profileImageUrl: data.profileImageUrl,
         avatar: data.avatar,
-        // isActive: data.isActive ?? true,
+        isActive: data.isActive ?? true,
       },
     });
 
@@ -167,7 +164,7 @@ export class UsersService {
 
   async findOneUser(id: string): Promise<UserResponseDto> {
     try {
-      // Validate UUID format
+     
       if (!this.isValidUUID(id)) {
         throw new BadRequestException('Invalid user ID format');
       }
@@ -522,19 +519,20 @@ export class UsersService {
     return uuidRegex.test(uuid);
   }
 
-  private toResponseDto(user: any): UserResponseDto {
-    return new UserResponseDto({
-      id: user.id,
-      email: user.email,
-      firstName: user.User.firstName,
-      lastName: user.User.lastName,
-      role: user.role,
-      // isActive: user.isActive,
-      phone: user.phone,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      profileImageUrl: user.profileImageUrl,
-    });
-  }
+private toResponseDto(user: any): UserResponseDto {
+  return new UserResponseDto({
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName ?? user.fname,
+    lastName: user.lastName ?? user.lname,
+    role: user.role,
+    isActive: user.isActive,
+    phone: user.phone,
+    lastLogin: user.lastLogin,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    profileImageUrl: user.profileImageUrl,
+    avatar: user.avatar,
+  });
+}
 }

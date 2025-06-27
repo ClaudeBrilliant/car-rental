@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   IsEmail,
@@ -47,6 +44,8 @@ export class CreateUserDto {
   @MinLength(1, { message: 'Last name is required' })
   @MaxLength(50, { message: 'Last name must not exceed 50 characters' })
   lastName: string;
+
+  isActive: boolean;
 
   @IsOptional()
   @IsString({ message: 'Avatar must be a string' })

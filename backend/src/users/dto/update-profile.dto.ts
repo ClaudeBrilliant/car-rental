@@ -45,4 +45,6 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsDateString()
   dateOfBirth?: string;
+
+  isActive?: boolean;
 }
