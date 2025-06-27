@@ -5,8 +5,8 @@ POST {{BASE_URL}}/reviews
 Content-Type: application/json
 
 {
-  "userId": "USER_ID",
-  "vehicleId": "VEHICLE_ID",
+  "userId": "cmcefejsm0002efdcz8eroa08",
+  "vehicleId": "cmcf42zp80000efry8jmwqszj",
   "rating": 4,
   "comment": "Clean car and smooth process."
 }
