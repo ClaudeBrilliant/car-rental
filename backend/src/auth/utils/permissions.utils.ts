@@ -1,14 +1,13 @@
 import { UserRole } from '@prisma/client';
 import { Permission } from '../enums/permissions.enum';
 
-
 /**
  * Permission utility class for role-based access control and authorization
  */
 export class PermissionsUtils {
   /**
    * Check if a user can perform an action on a resource, with optional ownership verification
-   * 
+   *
    * @param userRole - The role of the user attempting the action
    * @param userId - The ID of the user attempting the action
    * @param action - The permission being requested
@@ -36,10 +35,6 @@ export class PermissionsUtils {
       Permission.READ_NOTIFICATION,
       Permission.APPLY_COUPON,
       Permission.DELETE_REVIEW,
-      Permission.VIEW_CART,
-      Permission.UPDATE_CART,
-      Permission.ADD_TO_CART,
-      Permission.REMOVE_FROM_CART,
     ];
 
     // Permissions that agents can perform regardless of ownership
@@ -77,7 +72,10 @@ export class PermissionsUtils {
       return true;
     }
 
-    if (userRole === UserRole.CUSTOMER && customerPermissions.includes(action)) {
+    if (
+      userRole === UserRole.CUSTOMER &&
+      customerPermissions.includes(action)
+    ) {
       return true;
     }
 
@@ -92,7 +90,7 @@ export class PermissionsUtils {
 
   /**
    * Generate comprehensive permission matrix for UI control and role auditing
-   * 
+   *
    * @param userRole - The user role to generate permissions for
    * @returns Object containing categorized permissions with boolean values
    */
@@ -171,19 +169,12 @@ export class PermissionsUtils {
       auditLogs: {
         [Permission.READ_AUDIT_LOGS]: isAdmin,
       },
-
-      cart: {
-        [Permission.VIEW_CART]: isCustomer, // ownership checked separately
-        [Permission.UPDATE_CART]: isCustomer, // ownership checked separately
-        [Permission.ADD_TO_CART]: isCustomer, // ownership checked separately
-        [Permission.REMOVE_FROM_CART]: isCustomer, // ownership checked separately
-      },
     };
   }
 
   /**
    * Get all permissions available to a specific user role
-   * 
+   *
    * @param userRole - The user role to get permissions for
    * @returns Array of permissions available to the role
    */
@@ -191,9 +182,12 @@ export class PermissionsUtils {
     const matrix = this.generatePermissionMatrix(userRole);
     const permissions: Permission[] = [];
 
-    Object.values(matrix).forEach(section => {
+    Object.values(matrix).forEach((section) => {
       Object.entries(section).forEach(([permission, hasPermission]) => {
-        if (hasPermission && Object.values(Permission).includes(permission as Permission)) {
+        if (
+          hasPermission &&
+          Object.values(Permission).includes(permission as Permission)
+        ) {
           permissions.push(permission as Permission);
         }
       });
@@ -204,26 +198,26 @@ export class PermissionsUtils {
 
   /**
    * Check if a user role has a specific permission (without ownership verification)
-   * 
+   *
    * @param userRole - The user role to check
    * @param permission - The permission to verify
    * @returns boolean indicating if the role has the permission
    */
   static hasPermission(userRole: UserRole, permission: Permission): boolean {
     const matrix = this.generatePermissionMatrix(userRole);
-    
+
     for (const section of Object.values(matrix)) {
       if (section[permission]) {
         return true;
       }
     }
-    
+
     return false;
   }
 
   /**
    * Get permissions that require ownership verification
-   * 
+   *
    * @returns Array of permissions that require ownership checks
    */
   static getOwnershipRequiredPermissions(): Permission[] {
@@ -238,16 +232,12 @@ export class PermissionsUtils {
       Permission.READ_NOTIFICATION,
       Permission.APPLY_COUPON,
       Permission.DELETE_REVIEW,
-      Permission.VIEW_CART,
-      Permission.UPDATE_CART,
-      Permission.ADD_TO_CART,
-      Permission.REMOVE_FROM_CART,
     ];
   }
 
   /**
    * Get permissions grouped by category
-   * 
+   *
    * @returns Object with permissions organized by functional area
    */
   static getPermissionsByCategory() {
@@ -310,18 +300,12 @@ export class PermissionsUtils {
         Permission.MANAGE_LOCATIONS,
         Permission.VIEW_LOCATIONS,
       ],
-      cartManagement: [
-        Permission.VIEW_CART,
-        Permission.UPDATE_CART,
-        Permission.ADD_TO_CART,
-        Permission.REMOVE_FROM_CART,
-      ],
     };
   }
 
   /**
    * Validate if a permission exists in the system
-   * 
+   *
    * @param permission - The permission string to validate
    * @returns boolean indicating if the permission is valid
    */

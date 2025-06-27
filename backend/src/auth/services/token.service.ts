@@ -27,7 +27,9 @@ export class TokenService {
     console.log('JWT_SECRET:', this.secret);
     console.log('JWT_EXPIRES_IN:', this.expiresIn);
     try {
-      return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn });
+      return jwt.sign(payload as object, this.secret, {
+        expiresIn: this.expiresIn,
+      } as jwt.SignOptions);
     } catch (error) {
       throw new UnauthorizedException('Failed to generate token');
     }

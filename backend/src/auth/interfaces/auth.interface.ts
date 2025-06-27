@@ -1,7 +1,7 @@
 import { UserRole } from '@prisma/client';
 
 export interface AuthResponse {
-  accessToken: string;
+  access_token: string;
   user: {
     id: string;
     firstName: string;

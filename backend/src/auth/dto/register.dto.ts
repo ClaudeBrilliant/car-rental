@@ -21,7 +21,8 @@ export class RegisterDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.toLowerCase().trim() : value,
   )
-  name: string;
+  firstName: string;
+  lastName: string;
 
   @ApiProperty({
     example: 'user@example.com',
@@ -33,6 +34,8 @@ export class RegisterDto {
     typeof value === 'string' ? value.toLowerCase().trim() : value,
   )
   email: string;
+
+  isActive: boolean;
 
   @ApiProperty({
     example: 'P@ssw0rd!',

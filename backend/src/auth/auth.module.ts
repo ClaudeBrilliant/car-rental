@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/require-await */
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -16,6 +18,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permission.guard';
 import { PermissionsMiddleware } from './middleware/permissions.middleware';
 import { EmailModule } from 'services/mailer/email.module';
+import { UsersService } from 'src/users/users.service';
 
 @Module({
   imports: [
@@ -23,7 +26,7 @@ import { EmailModule } from 'services/mailer/email.module';
     UsersModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule, UsersModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -36,6 +39,7 @@ import { EmailModule } from 'services/mailer/email.module';
   ],
   controllers: [AuthController],
   providers: [
+    UsersService, // Ensure UsersService is provided here
     AuthService,
     TokenService,
     PermissionsService,
@@ -46,7 +50,7 @@ import { EmailModule } from 'services/mailer/email.module';
   ],
   exports: [
     AuthService,
-    TokenService,
+    UsersService,
     PermissionsService,
     JwtAuthGuard,
     RolesGuard,

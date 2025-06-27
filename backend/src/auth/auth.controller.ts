@@ -57,7 +57,8 @@ export class AuthController {
           type: 'object',
           properties: {
             id: { type: 'string' },
-            name: { type: 'string' },
+            firstName: { type: 'string' }, // Changed from 'name'
+            lastName: { type: 'string' }, // Added lastName
             email: { type: 'string' },
             role: { type: 'string' },
             phone: { type: 'string' },
@@ -89,7 +90,8 @@ export class AuthController {
           type: 'object',
           properties: {
             id: { type: 'string' },
-            name: { type: 'string' },
+            firstName: { type: 'string' }, // Changed from 'name'
+            lastName: { type: 'string' }, // Added lastName
             email: { type: 'string' },
             role: { type: 'string' },
             isActive: { type: 'boolean' },
@@ -214,7 +216,8 @@ export class AuthController {
         id: { type: 'string' },
         email: { type: 'string' },
         role: { type: 'string' },
-        name: { type: 'string' },
+        firstName: { type: 'string' }, // Changed from 'name'
+        lastName: { type: 'string' },
         isActive: { type: 'boolean' },
       },
     },
@@ -242,7 +245,8 @@ export class AuthController {
             id: { type: 'string' },
             email: { type: 'string' },
             role: { type: 'string' },
-            name: { type: 'string' },
+            firstName: { type: 'string' }, // Changed from 'name'
+            lastName: { type: 'string' }, // Added lastName
           },
         },
       },

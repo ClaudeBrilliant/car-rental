@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
 /* eslint-disable @typescript-eslint/no-namespace */
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { Permission } from '../enums/permissions.enum';
 import { PermissionsService } from '../services/permission.service';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class PermissionsMiddleware implements NestMiddleware {
@@ -35,7 +34,7 @@ declare global {
       email: string;
       role: UserRole;
       firstName?: string;
-      lastName: string;
+      lastName?: string;
     }
 
     interface Request {

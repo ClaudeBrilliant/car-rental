@@ -21,7 +21,7 @@ import { TokenService } from './services/token.service';
 
 import { LoginDto } from './dto/login.dto';
 import { EmailService } from 'services/mailer/email.service';
-import { CreateUserDto } from 'src/users/dtos/create-user.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -45,18 +45,20 @@ export class AuthService {
       }
 
       const user = await this.usersService.createUser({
-        name: CreateUserDto.name,
+        firstName: CreateUserDto.firstName,
+        lastName: CreateUserDto.lastName,
         email: CreateUserDto.email,
         phone: CreateUserDto.phone,
         password: CreateUserDto.password,
         role: CreateUserDto.role || UserRole.CUSTOMER,
+        isActive: true,
       });
 
       try {
         await this.emailService.sendWelcomeEmail(user.email, {
-          name: user.name,
+          name: `${user.firstName} ${user.lastName}`,
           loginUrl: 'http://localhost:3000/pages/login/login.html',
-          supportEmail: 'support@project-managment.com',
+          supportEmail: 'support@clyde-hire.com',
           email: 'ebs362920@gmail.com',
           currentYear: new Date().getFullYear(),
         });
@@ -100,51 +102,29 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
-    this.logger.log(`Attempting login for email: ${loginDto.email}`);
-
     try {
-      let user;
-      try {
-        user = await this.usersService.findUserByEmail(loginDto.email);
-        this.logger.debug(`User found: ${user.id}`);
-      } catch (error) {
-        if (error instanceof NotFoundException) {
-          this.logger.warn(
-            `Login failed: User not found for email ${loginDto.email}`,
-          );
-          throw new UnauthorizedException('Invalid credentials');
-        }
-        this.logger.error(
-          `Unexpected error during user lookup: ${error.message}`,
-          error.stack,
-        );
-        throw error;
-      }
+      // Find user by email
+      const user = await this.usersService.findUserByEmail(loginDto.email);
 
-      if (!user.isActive) {
-        this.logger.warn(
-          `Login attempt for deactivated account: ${loginDto.email}`,
-        );
-        throw new UnauthorizedException('Account is deactivated');
+      if (!user || !user.password) {
+        throw new UnauthorizedException('Invalid credentials');
       }
-      this.logger.log('User found and active');
-      const userWithPassword = await this.usersService.getUserWithPassword(
-        loginDto.email,
-      );
+      console.log(user);
 
+      // Verify password
       const isPasswordValid = await bcrypt.compare(
         loginDto.password,
-        userWithPassword.password,
+        user.password,
       );
-      this.logger.log(`Password comparison result: ${isPasswordValid}`);
-
       if (!isPasswordValid) {
-        this.logger.warn(
-          `Invalid password attempt for email: ${loginDto.email}`,
-        );
         throw new UnauthorizedException('Invalid credentials');
       }
 
+      if (!user.isActive) {
+        throw new UnauthorizedException('Account is deactivated');
+      }
+
+      // Generate JWT token
       const payload: JwtPayload = {
         sub: user.id,
         email: user.email,
@@ -153,11 +133,8 @@ export class AuthService {
 
       const access_token = this.tokenService.generateToken(payload);
 
-      await this.usersService.updateUserLastLogin(user.id);
-      this.logger.log(`Login successful for user: ${user.id}`);
-
-      return {
-        accessToken: access_token,
+      const response: AuthResponse = {
+        access_token,
         user: {
           id: user.id,
           firstName: user.firstName,
@@ -165,16 +142,15 @@ export class AuthService {
           email: user.email,
           role: user.role,
           isActive: user.isActive,
-          lastLogin: new Date(),
+          lastLogin: user.lastLogin || new Date(),
         },
-        message: 'Login successful, Welcome back!',
       };
+
+      console.log(' Login successful for user:', user.email);
+      return response;
     } catch (error) {
-      if (!(error instanceof UnauthorizedException)) {
-        this.logger.error(
-          `Unhandled error during login: ${error.message}`,
-          error.stack,
-        );
+      if (error instanceof UnauthorizedException) {
+        throw error;
       }
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -193,6 +169,8 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role,
+        firstName: user.firstName, // ✅ Fixed - use firstName instead of user.name
+        lastName: user.lastName, // ✅ Fixed - use lastName instead of user.name
         isActive: user.isActive,
       };
     } catch (error) {
@@ -287,7 +265,7 @@ export class AuthService {
       // Send password reset email
       try {
         await this.emailService.sendPasswordResetEmail(user.email, {
-          name: user.name,
+          name: `${user.firstName} ${user.lastName}`, // ✅ Fixed - combine firstName and lastName
           resetToken,
           resetUrl: `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`,
           expiresIn: '1 hour',
