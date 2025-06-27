@@ -4,22 +4,24 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { BookingsModule } from './bookings/bookings.module';
-import { ReviewsModule } from './reviews/reviews.module';
-import { LocationsModule } from './locations/locations.module';
-import { NotificationsModule } from './notifications/notifications.module';
 import { SettingsModule } from './settings/settings.module';
-import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { AuthModule } from './auth/auth.module';
+import { AuditLogModule } from './audit-logs/audit-logs.module';
+import { LocationModule } from './locations/locations.module';
+import { NotificationModule } from './notifications/notifications.module';
+import { ReviewModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
     UsersModule,
     VehiclesModule,
     BookingsModule,
-    ReviewsModule,
-    LocationsModule,
-    NotificationsModule,
+    ReviewModule,
+    LocationModule,
+    NotificationModule,
     SettingsModule,
-    AuditLogsModule,
+    AuditLogModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
