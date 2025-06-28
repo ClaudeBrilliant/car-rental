@@ -1,0 +1,67 @@
+<!-- Navbar always shows -->
+<nav class="bg-white shadow-lg border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo -->
+      <div class="flex items-center space-x-4">
+        <h1 class="text-2xl font-bold text-gray-800 cursor-pointer"
+            (click)="navigateTo('/dashboard')">
+          🚗 ClydeHire
+        </h1>
+        <!-- <span class="text-sm text-gray-500">Vehicle Rental Management</span> -->
+      </div>
+      <!-- Navigation Links -->
+      <div class="hidden md:flex items-center space-x-1">
+        <button
+          (click)="navigateTo('/login')"
+          [class.bg-blue-900]="isActiveRoute('/login')"
+          [class.text-white]="isActiveRoute('/login')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          🔐 Login
+        </button>
+        <button
+          (click)="navigateTo('/dashboard')"
+          [class.bg-blue-900]="isActiveRoute('/dashboard')"
+          [class.text-white]="isActiveRoute('/dashboard')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          📊 Dashboard
+        </button>
+        <button
+          (click)="navigateTo('/bookings')"
+          [class.bg-blue-900]="isActiveRoute('/bookings')"
+          [class.text-white]="isActiveRoute('/bookings')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          📋 Bookings
+        </button>
+        <button
+          (click)="navigateTo('/vehicles')"
+          [class.bg-blue-900]="isActiveRoute('/vehicles')"
+          [class.text-white]="isActiveRoute('/vehicles')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          🚙 Vehicles
+        </button>
+        <button
+          (click)="navigateTo('/vehicle/list')"
+          [class.bg-blue-900]="isActiveRoute('/vehicle/list')"
+          [class.text-white]="isActiveRoute('/vehicle/list')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          🚗 Vehicle List
+        </button>
+        <button
+          (click)="navigateTo('/customers')"
+          [class.bg-blue-900]="isActiveRoute('/customers')"
+          [class.text-white]="isActiveRoute('/customers')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          👥 Customers
+        </button>
+        <button
+          (click)="navigateTo('/reports')"
+          [class.bg-blue-900]="isActiveRoute('/reports')"
+          [class.text-white]="isActiveRoute('/reports')"
+          class="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-900 hover:text-white transition-colors">
+          📈 Reports
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "frontend": {
+    "hotel-ui": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -14,9 +14,6 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -56,10 +53,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "frontend:build:production"
+              "buildTarget": "hotel-ui:build:production"
             },
             "development": {
-              "buildTarget": "frontend:build:development"
+              "buildTarget": "hotel-ui:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -70,10 +67,6 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
               {
@@ -88,5 +81,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

@@ -1,0 +1,272 @@
+<div class="min-h-screen bg-gray-50 p-6">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Hotel Room Management</h1>
+
+            <!-- Controls Section - Demonstrating ngClass and ngStyle -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+                <!-- Filter Toggle -->
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="availableOnly" [(ngModel)]="showAvailableOnly" class="rounded">
+                    <label for="availableOnly"
+                        [ngClass]="{'text-green-600 font-semibold': showAvailableOnly, 'text-gray-600': !showAvailableOnly}"
+                        class="cursor-pointer">
+                        Show Available Only
+                    </label>
+                </div>
+
+                <!-- View Selector -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">View Type:</label>
+                    <select [(ngModel)]="selectedView"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option *ngFor="let option of viewOptions" [value]="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Sort Selector -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sort By:</label>
+                    <select [(ngModel)]="sortBy"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <!-- Using @for -->
+                        @for(option of sortOptions; track $index){
+                            <option [value]="option.value">
+                            {{ option.label }}
+                        </option>
+                        }
+                        
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="flex justify-between items-center">
+                <p class="text-gray-600">
+                    Showing {{ getFilteredRooms().length }} of {{ rooms.length }} rooms
+                </p>
+                <div [ngStyle]="{
+            'background-color': showAvailableOnly ? '#dcfce7' : '#f3f4f6',
+            'color': showAvailableOnly ? '#166534' : '#374151',
+            'padding': '8px 16px',
+            'border-radius': '8px',
+            'font-weight': '500'
+          }">
+                    {{ showAvailableOnly ? 'Available Rooms Only' : 'All Rooms' }}
+                </div>
+            </div>
+        </div>
+
+        <div [ngSwitch]="selectedView">
+
+            <!-- Grid View -->
+            <div *ngSwitchCase="'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Using *ngFor with trackBy for performance -->
+                <div *ngFor="let room of getFilteredRooms(); trackBy: trackByRoomId" [ngClass]="{
+            'ring-2 ring-green-400': room.available,
+            'ring-2 ring-red-400': !room.available,
+            'opacity-75': !room.available
+          }" class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300">
+
+                    <div class="relative">
+                        <img [src]="room.image" [alt]="room.name" class="w-full h-48 object-cover">
+
+                        <!-- Status Badge using ngClass -->
+                        <div [ngClass]="getRoomStatusBadgeClasses(room.available)"
+                            class="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold">
+                            {{ room.available ? 'Available' : 'Booked' }}
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">{{ room.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-3">{{ room.description }}</p>
+
+                        <!-- Price with dynamic (ngClass) styling -->
+                        <div [ngClass]="getPriceRangeClass(room.price)"
+                            class="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-3">
+                            ${{ room.price }}/night
+                        </div>
+
+                        <!-- Rating Display -->
+                        <div class="flex items-center mb-3">
+                            <span *ngFor="let star of getRatingStars(room.rating)" [ngClass]="{
+                  'text-yellow-400': star === 'full',
+                  'text-yellow-200': star === 'half',
+                  'text-gray-300': star === 'empty'
+                }" class="text-lg">
+                                ★
+                            </span>
+                            <span class="ml-2 text-gray-600 text-sm">{{ room.rating }}/5</span>
+                        </div>
+
+                        <!-- Amenities -->
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-sm text-gray-700 mb-2">Amenities:</h4>
+                            <div class="flex flex-wrap gap-1">
+                                <span *ngFor="let amenity of room.amenities"
+                                    class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                    {{ amenity }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Booking Info using *ngIf -->
+                        <div *ngIf="getBookingForRoom(room.id) as booking" class="mb-3 p-2 bg-gray-50 rounded">
+                            <p class="text-xs text-gray-600">
+                                <strong>Booked by:</strong> {{ booking.guestName }}
+                                <br>
+                                <strong>Check-in:</strong> {{ booking.checkIn | date:'shortDate' }}
+                            </p>
+                        </div>
+
+
+                        <!-- Action Button -->
+                        <button [disabled]="!room.available" [ngStyle]="{
+                'background-color': room.available ? '#3b82f6' : '#9ca3af',
+                'cursor': room.available ? 'pointer' : 'not-allowed'
+              }" class="w-full text-white py-2 rounded-lg hover:opacity-90 transition-opacity">
+                            {{ room.available ? 'Book Now' : 'Unavailable' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List View -->
+            <div *ngSwitchCase="'list'" class="space-y-4">
+                <div *ngFor="let room of getFilteredRooms()"
+                    class="bg-white rounded-lg shadow-md p-6 flex items-center space-x-4">
+
+                    <img [src]="room.image" [alt]="room.name" class="w-24 h-24 object-cover rounded-lg">
+
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">{{ room.name }}</h3>
+                            <span [ngClass]="getRoomStatusBadgeClasses(room.available)"
+                                class="px-2 py-1 rounded-full text-xs font-semibold">
+                                {{ room.available ? 'Available' : 'Booked' }}
+                            </span>
+                        </div>
+
+                        <p class="text-gray-600 mb-2">{{ room.description }}</p>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span [ngClass]="getPriceRangeClass(room.price)"
+                                    class="px-2 py-1 rounded text-sm font-semibold">
+                                    ${{ room.price }}/night
+                                </span>
+
+                                <div class="flex items-center">
+                                    <span class="text-yellow-400">★</span>
+                                    <span class="ml-1 text-gray-600 text-sm">{{ room.rating }}</span>
+                                </div>
+                            </div>
+
+                            <button [disabled]="!room.available" [ngClass]="{
+                  'bg-blue-500 hover:bg-blue-600 text-white': room.available,
+                  'bg-gray-300 text-gray-500 cursor-not-allowed': !room.available
+                }" class="px-4 py-2 rounded-lg transition-colors">
+                                {{ room.available ? 'Book' : 'Unavailable' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div *ngSwitchCase="'table'" class="bg-white rounded-lg shadow-md overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Room</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Rating</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let room of getFilteredRooms(); odd as isOdd" [ngClass]="{'bg-gray-50': isOdd}">
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <img [src]="room.image" [alt]="room.name"
+                                        class="h-10 w-10 rounded-full object-cover">
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ room.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ room.amenities.length }} amenities</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    {{ room.type }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span [ngClass]="getPriceRangeClass(room.price)"
+                                    class="px-2 py-1 rounded text-sm font-semibold">
+                                    ${{ room.price }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="text-yellow-400">★</span>
+                                    <span class="ml-1 text-sm text-gray-600">{{ room.rating }}</span>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span [ngClass]="getRoomStatusBadgeClasses(room.available)"
+                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                                    {{ room.available ? 'Available' : 'Booked' }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button [disabled]="!room.available" [ngClass]="{
+                    'text-blue-600 hover:text-blue-900': room.available,
+                    'text-gray-400 cursor-not-allowed': !room.available
+                  }">
+                                    {{ room.available ? 'Book' : 'Unavailable' }}
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty State using @if -->
+
+                @if(getFilteredRooms().length === 0){
+                <div class="text-center py-8">
+                    <p class="text-gray-500">No rooms found matching your criteria.</p>
+                </div>
+                }
+
+            </div>
+            
+
+            <!-- Default case -->
+            <div *ngSwitchDefault class="text-center py-8">
+                <p class="text-gray-500">Invalid view selected.</p>
+            </div>
+        </div>
+    </div>
+</div>

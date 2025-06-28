@@ -1,0 +1,387 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-navy-900">Fleet Management System</h1>
+        <div class="flex gap-4">
+          <button 
+            (click)="toggleFilters()"
+            class="bg-navy-600 text-white px-4 py-2 rounded-lg hover:bg-navy-700 transition-colors">
+            {{ showFilters() ? 'Hide' : 'Show' }} Filters
+          </button>
+          <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            Add Vehicle
+          </button>
+        </div>
+      </div>
+
+      <!-- Fleet Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="bg-navy-50 p-4 rounded-lg border border-navy-200">
+          <h3 class="font-semibold text-navy-800">Total Fleet</h3>
+          <p class="text-2xl font-bold text-navy-600">{{ vehicleStats().total }}</p>
+        </div>
+        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+          <h3 class="font-semibold text-green-800">Available</h3>
+          <p class="text-2xl font-bold text-green-600">{{ vehicleStats().available }}</p>
+        </div>
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h3 class="font-semibold text-blue-800">Rented</h3>
+          <p class="text-2xl font-bold text-blue-600">{{ vehicleStats().rented }}</p>
+        </div>
+        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <h3 class="font-semibold text-yellow-800">Maintenance</h3>
+          <p class="text-2xl font-bold text-yellow-600">{{ vehicleStats().maintenance }}</p>
+        </div>
+        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <h3 class="font-semibold text-purple-800">Utilization</h3>
+          <p class="text-2xl font-bold text-purple-600">{{ vehicleStats().utilizationRate }}%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div class="relative">
+        <input 
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange($any($event.target).value)"
+          placeholder="Search vehicles by make, model, color, or license plate..."
+          class="w-full p-4 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent">
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+          🔍
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div *ngIf="showFilters()" class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h3 class="font-semibold text-navy-800 mb-4">🔍 Advanced Filters</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        
+        <!-- Category Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+          <select 
+            [value]="filterSignal().category"
+            (change)="updateFilter({ category: $any($event.target).value })"
+            class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500">
+            <option value="">All Categories</option>
+            <option *ngFor="let category of Object.values(VehicleCategory)" [value]="category">
+              {{ toTitleCase(category) }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Transmission Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Transmission</label>
+          <select 
+            [value]="filterSignal().transmission"
+            (change)="updateFilter({ transmission: $any($event.target).value })"
+            class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500">
+            <option value="">All Transmissions</option>
+            <option *ngFor="let transmission of Object.values(TransmissionType)" [value]="transmission">
+              {{ toTitleCase(transmission) }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Fuel Type Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fuel Type</label>
+          <select 
+            [value]="filterSignal().fuelType"
+            (change)="updateFilter({ fuelType: $any($event.target).value })"
+            class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500">
+            <option value="">All Fuel Types</option>
+            <option *ngFor="let fuelType of Object.values(FuelType)" [value]="fuelType">
+              {{ toTitleCase(fuelType) }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Status Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <select 
+            [value]="filterSignal().status"
+            (change)="updateFilter({ status: $any($event.target).value })"
+            class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500">
+            <option value="">All Statuses</option>
+            <option *ngFor="let status of Object.values(VehicleStatus)" [value]="status">
+              {{ toTitleCase(status.replace('_', ' ')) }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Price Range -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Price Range (per day)</label>
+          <div class="flex gap-2">
+            <input 
+              type="number" 
+              [value]="filterSignal().priceRange.min"
+              (input)="onMinPriceChange($any($event.target).value)"
+              placeholder="Min"
+              class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500">
+            <input 
+              type="number" 
+              [value]="filterSignal().priceRange.max"
+              (input)="onMaxPriceChange($any($event.target).value)"
+              placeholder="Max"
+              class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500">
+          </div>
+        </div>
+        
+        <!-- Available Only Toggle -->
+        <div class="flex items-center">
+          <input 
+            type="checkbox" 
+            id="availableOnly"
+            [checked]="filterSignal().availableOnly"
+            (change)="updateFilter({ availableOnly: $any($event.target).checked })"
+            class="mr-2 h-4 w-4 text-navy-600 focus:ring-navy-500 border-gray-300 rounded">
+          <label for="availableOnly" class="text-sm font-medium text-gray-700">Available Only</label>
+        </div>
+        
+        <!-- Clear Filters -->
+        <div class="flex items-end">
+          <button 
+            (click)="clearFilters()"
+            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+      
+      <p class="text-sm text-gray-600 mt-4">
+        Showing {{ filteredVehicles().length }} of {{ vehicleStats().total }} vehicles
+      </p>
+    </div>
+
+    <!-- Vehicle Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div 
+        *ngFor="let vehicle of filteredVehicles()" 
+        (click)="selectVehicle(vehicle.id)"
+        [class.ring-2]="selectedVehicleId() === vehicle.id"
+        [class.ring-navy-500]="selectedVehicleId() === vehicle.id"
+        class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all cursor-pointer border">
+        
+        <!-- Vehicle Image Placeholder -->
+        <div class="h-48 bg-gradient-to-r from-navy-400 to-navy-600 flex items-center justify-center text-white text-6xl">
+          {{ getCategoryIcon(vehicle.category) }}
+        </div>
+        
+        <!-- Vehicle Details -->
+        <div class="p-6">
+          
+          <!-- Header -->
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h3>
+              <p class="text-gray-600">{{ vehicle.category | titlecase }} • {{ vehicle.color }}</p>
+              <p class="text-sm text-gray-500" *ngIf="vehicle.licensePlate">{{ vehicle.licensePlate }}</p>
+            </div>
+            <span [class]="getStatusColor(vehicle.status)" 
+                  class="px-3 py-1 rounded-full text-xs font-semibold">
+              {{ toTitleCase(vehicle.status.replace('_', ' ')) }}
+            </span>
+          </div>
+          
+          <!-- Specifications -->
+          <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+            <div class="flex items-center gap-2">
+              <span>👥</span>
+              <span>{{ vehicle.seatingCapacity }} seats</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>🚪</span>
+              <span>{{ vehicle.doors }} doors</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>⚙️</span>
+              <span>{{ toTitleCase(vehicle.transmission) }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>{{ getFuelTypeIcon(vehicle.fuelType) }}</span>
+              <span>{{ toTitleCase(vehicle.fuelType) }}</span>
+            </div>
+          </div>
+          
+          <!-- Features -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span *ngIf="vehicle.hasAC" class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">❄️ AC</span>
+            <span *ngIf="vehicle.hasGPS" class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">🗺️ GPS</span>
+            <span *ngIf="vehicle.hasBluetooth" class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">📱 Bluetooth</span>
+            <span *ngIf="vehicle.hasWifi" class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">📶 WiFi</span>
+            <span *ngIf="vehicle.hasUSB" class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">🔌 USB</span>
+            <span *ngIf="vehicle.hasSunroof" class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">☀️ Sunroof</span>
+          </div>
+          
+          <!-- Pricing -->
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <p class="text-2xl font-bold text-navy-600">${{ vehicle.pricePerDay }}<span class="text-sm font-normal text-gray-500">/day</span></p>
+              <p class="text-sm text-gray-500">${{ vehicle.pricePerHour }}/hour</p>
+            </div>
+            <div class="text-right text-sm text-gray-600" *ngIf="vehicle.mileage">
+              <p>{{ vehicle.mileage | number }} miles</p>
+            </div>
+          </div>
+          
+          <!-- Location -->
+          <div class="mb-4" *ngIf="vehicle.currentLocation">
+            <p class="text-sm text-gray-600">
+              <span class="font-medium">📍 Location:</span> {{ vehicle.currentLocation }}
+            </p>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex gap-2">
+            <button 
+              *ngIf="vehicle.status === VehicleStatus.AVAILABLE"
+              class="flex-1 bg-navy-600 text-white py-2 px-4 rounded-lg hover:bg-navy-700 transition-colors">
+              Rent Now
+            </button>
+            
+            <button 
+              *ngIf="vehicle.status === VehicleStatus.RENTED"
+              (click)="updateVehicleStatus(vehicle.id, VehicleStatus.AVAILABLE); $event.stopPropagation()"
+              class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+              Return Vehicle
+            </button>
+            
+            <button 
+              *ngIf="vehicle.status === VehicleStatus.MAINTENANCE"
+              (click)="updateVehicleStatus(vehicle.id, VehicleStatus.AVAILABLE); $event.stopPropagation()"
+              class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+              Mark Available
+            </button>
+            
+            <button 
+              *ngIf="vehicle.status === VehicleStatus.AVAILABLE"
+              (click)="updateVehicleStatus(vehicle.id, VehicleStatus.MAINTENANCE); $event.stopPropagation()"
+              class="bg-yellow-500 text-white py-2 px-3 rounded-lg hover:bg-yellow-600 transition-colors">
+              🔧
+            </button>
+            
+            <button class="bg-gray-500 text-white py-2 px-3 rounded-lg hover:bg-gray-600 transition-colors">
+              ⋯
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected Vehicle Details Panel -->
+    <div *ngIf="selectedVehicle() as vehicle" class="mt-8 bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-bold text-navy-900 mb-4">🚗 Selected Vehicle Details</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Basic Information -->
+        <div>
+          <h4 class="font-semibold text-navy-800 mb-3">Basic Information</h4>
+          <div class="space-y-2 text-sm">
+            <p><span class="font-medium">Vehicle:</span> {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</p>
+            <p><span class="font-medium">Category:</span> {{ toTitleCase(vehicle.category) }}</p>
+            <p><span class="font-medium">Color:</span> {{ vehicle.color }}</p>
+            <p><span class="font-medium">License Plate:</span> {{ vehicle.licensePlate || 'N/A' }}</p>
+            <p><span class="font-medium">VIN:</span> {{ vehicle.vin || 'N/A' }}</p>
+            <p><span class="font-medium">Status:</span> 
+              <span [class]="getStatusColor(vehicle.status)" 
+                    class="px-2 py-1 rounded-full text-xs font-semibold">
+                {{ toTitleCase(vehicle.status.replace('_', ' ')) }}
+              </span>
+            </p>
+          </div>
+        </div>
+        
+        <!-- Technical Specifications -->
+        <div>
+          <h4 class="font-semibold text-navy-800 mb-3">Technical Specifications</h4>
+          <div class="space-y-2 text-sm">
+            <p><span class="font-medium">Seating Capacity:</span> {{ vehicle.seatingCapacity }} seats</p>
+            <p><span class="font-medium">Doors:</span> {{ vehicle.doors }}</p>
+            <p><span class="font-medium">Transmission:</span> {{ vehicle.transmission | titlecase }}</p>
+            <p><span class="font-medium">Transmission:</span> {{ toTitleCase(vehicle.transmission) }}</p>
+            <p><span class="font-medium">Fuel Type:</span> {{ toTitleCase(vehicle.fuelType) }}</p>
+            <p><span class="font-medium">Engine:</span> {{ vehicle.engineSize || 'N/A' }}</p>
+          </div>
+        </div>
+        
+        <!-- Pricing & Location -->
+        <div>
+          <h4 class="font-semibold text-navy-800 mb-3">Pricing & Location</h4>
+          <div class="space-y-2 text-sm">
+            <p><span class="font-medium">Daily Rate:</span> ${{ vehicle.pricePerDay }}</p>
+            <p><span class="font-medium">Hourly Rate:</span> ${{ vehicle.pricePerHour }}</p>
+            <p><span class="font-medium">Current Location:</span> {{ vehicle.currentLocation || 'Main Depot' }}</p>
+            <p><span class="font-medium">Last Service:</span> {{ vehicle.lastServiceDate || 'N/A' }}</p>
+            <p><span class="font-medium">Next Service Due:</span> {{ vehicle.nextServiceDate || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Features Section -->
+      <div class="mt-6">
+        <h4 class="font-semibold text-navy-800 mb-3">Features & Amenities</h4>
+        <div class="flex flex-wrap gap-2">
+          <span *ngIf="vehicle.hasAC" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">❄️ Air Conditioning</span>
+          <span *ngIf="vehicle.hasGPS" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">🗺️ GPS Navigation</span>
+          <span *ngIf="vehicle.hasBluetooth" class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">📱 Bluetooth</span>
+          <span *ngIf="vehicle.hasWifi" class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">📶 WiFi Hotspot</span>
+          <span *ngIf="vehicle.hasUSB" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">🔌 USB Charging</span>
+          <span *ngIf="vehicle.hasSunroof" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">☀️ Sunroof</span>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="mt-6 flex gap-3">
+        <button 
+          *ngIf="vehicle.status === VehicleStatus.AVAILABLE"
+          class="bg-navy-600 text-white px-6 py-2 rounded-lg hover:bg-navy-700 transition-colors">
+          Create Booking
+        </button>
+        <button 
+          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          Edit Vehicle
+        </button>
+        <button 
+          class="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition-colors">
+          Schedule Maintenance
+        </button>
+        <button 
+          class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+          View History
+        </button>
+        <button 
+          (click)="selectedVehicleId.set(null)"
+          class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+          Close Details
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredVehicles().length === 0" class="text-center py-12">
+      <div class="text-6xl mb-4">🚗</div>
+      <h3 class="text-xl font-semibold text-gray-600 mb-2">No vehicles found</h3>
+      <p class="text-gray-500 mb-4">Try adjusting your search criteria or filters</p>
+      <button 
+        (click)="clearFilters()"
+        class="bg-navy-600 text-white px-6 py-2 rounded-lg hover:bg-navy-700 transition-colors">
+        Clear All Filters
+      </button>
+    </div>
+  </div>
+</div>

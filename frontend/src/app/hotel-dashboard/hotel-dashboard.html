@@ -1,0 +1,274 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Dashboard Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">ClydeHire Fleet Management Dashboard</h1>
+          <!-- OnInit: Time updates via subscription -->
+          <p class="text-gray-600 mt-1">{{ currentTime | date:'EEEE, MMMM d, y - HH:mm:ss' }}</p>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <!-- AfterViewInit: DOM manipulation ready -->
+          <div class="relative">
+            <button 
+              #notificationBell
+              (click)="clearNotifications()"
+              class="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-900 rounded-full">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              <span *ngIf="notificationCount > 0" 
+                    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {{ notificationCount }}
+              </span>
+            </button>
+          </div>
+          
+          <!-- Manual refresh demonstrates OnInit patterns -->
+          <button 
+            (click)="refreshDashboard()"
+            [disabled]="isLoadingStats || isLoadingActivities"
+            class="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 disabled:opacity-50 transition-colors">
+            <span *ngIf="!(isLoadingStats || isLoadingActivities)">Refresh Data</span>
+            <span *ngIf="isLoadingStats || isLoadingActivities">Refreshing...</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Lifecycle Demo Panel -->
+      <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 class="text-sm font-semibold text-blue-800 mb-2">Component Lifecycle Demo</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span class="text-blue-700">Constructor: ✅ Complete</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span class="text-blue-700">OnInit: ✅ Data Loading</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span class="text-blue-700">AfterViewInit: ✅ DOM Ready</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+            <span class="text-blue-700">OnDestroy: ⏳ On Route Change</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fleet Statistics Cards - OnInit Data Loading -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      
+      <!-- Loading State for Stats -->
+      <div *ngIf="isLoadingStats" class="col-span-full">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+          <p class="text-gray-600">Loading fleet statistics...</p>
+          <p class="text-sm text-gray-500 mt-1">OnInit: HTTP simulation in progress</p>
+        </div>
+      </div>
+
+      <!-- Stats Cards - Data from OnInit -->
+      <div *ngIf="fleetStats && !isLoadingStats" class="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Fleet Utilization Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">Fleet Utilization</h3>
+              <p class="text-3xl font-bold text-blue-900">{{ getUtilizationPercentage() }}%</p>
+              <p class="text-sm text-gray-600">{{ fleetStats.rentedVehicles }} of {{ fleetStats.totalVehicles }} vehicles</p>
+            </div>
+            <div class="text-4xl">🚗</div>
+          </div>
+          <div class="mt-4 bg-gray-200 rounded-full h-2">
+            <div 
+              class="bg-blue-900 h-2 rounded-full transition-all duration-500"
+              [style.width.%]="getUtilizationPercentage()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Vehicles Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">Available Vehicles</h3>
+              <p class="text-3xl font-bold text-green-600">{{ fleetStats.availableVehicles }}</p>
+              <p class="text-sm text-gray-600">Ready for rental</p>
+            </div>
+            <div class="text-4xl">✅</div>
+          </div>
+        </div>
+
+        <!-- Maintenance Vehicles Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">In Maintenance</h3>
+              <p class="text-3xl font-bold text-yellow-600">{{ fleetStats.maintenanceVehicles }}</p>
+              <p class="text-sm text-gray-600">Under service</p>
+            </div>
+            <div class="text-4xl">🔧</div>
+          </div>
+        </div>
+
+        <!-- Daily Revenue Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">Today's Revenue</h3>
+              <p class="text-3xl font-bold text-purple-600">${{ fleetStats.revenue | number:'1.2-2' }}</p>
+              <p class="text-sm text-gray-600">All rentals</p>
+            </div>
+            <div class="text-4xl">💰</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Activities - Real-time Updates -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      
+      <!-- Pending Pickups -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Pending Pickups</h3>
+          <span class="bg-green-100 text-green-800 text-sm font-semibold px-2 py-1 rounded-full">
+            {{ fleetStats?.pendingPickups || 0 }}
+          </span>
+        </div>
+        <p class="text-gray-600">Vehicle rentals scheduled for pickup today</p>
+        <p class="text-xs text-gray-500 mt-2">Updated via OnInit subscription every 30 seconds</p>
+      </div>
+
+      <!-- Pending Returns -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Pending Returns</h3>
+          <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-2 py-1 rounded-full">
+            {{ fleetStats?.pendingReturns || 0 }}
+          </span>
+        </div>
+        <p class="text-gray-600">Vehicle rentals scheduled for return today</p>
+        <p class="text-xs text-gray-500 mt-2">Real-time updates via interval subscription</p>
+      </div>
+    </div>
+
+    <!-- Recent Activities - OnInit Data + Real-time Updates -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Recent Activities</h3>
+        <span class="text-sm text-gray-500">Live updates every 10 seconds</span>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoadingActivities" class="text-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900 mx-auto mb-2"></div>
+        <p class="text-gray-600">Loading recent activities...</p>
+      </div>
+
+      <!-- Activities List -->
+      <div *ngIf="!isLoadingActivities" class="space-y-3">
+        <div 
+          *ngFor="let activity of recentActivities" 
+          class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          
+          <div class="flex items-center space-x-3">
+            <span class="text-2xl">{{ getActivityIcon(activity.type) }}</span>
+            <div>
+              <p class="font-medium text-gray-900">{{ activity.customerName }}</p>
+              <p class="text-sm text-gray-600">{{ activity.vehicleModel }} • {{ activity.timestamp | date:'shortTime' }}</p>
+            </div>
+          </div>
+          
+          <div class="text-right">
+            <span 
+              [class]="getActivityColor(activity.type)"
+              class="px-2 py-1 rounded-full text-xs font-semibold capitalize">
+              {{ activity.type }}
+            </span>
+            <p *ngIf="activity.amount" class="text-sm font-medium text-gray-900 mt-1">
+              ${{ activity.amount | number:'1.2-2' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoadingActivities && recentActivities.length === 0" class="text-center py-8 text-gray-500">
+        <div class="text-4xl mb-2">📋</div>
+        <p>No recent activities</p>
+      </div>
+    </div>
+
+    <!-- Quick Actions Panel -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <button class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-left">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">New Rental</h3>
+            <p class="text-sm text-gray-600">Create new booking</p>
+          </div>
+          <div class="text-3xl">📝</div>
+        </div>
+      </button>
+
+      <button class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-left">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Vehicle Inspection</h3>
+            <p class="text-sm text-gray-600">Check vehicle condition</p>
+          </div>
+          <div class="text-3xl">🔍</div>
+        </div>
+      </button>
+
+      <button class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-left">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Customer Support</h3>
+            <p class="text-sm text-gray-600">Handle customer queries</p>
+          </div>
+          <div class="text-3xl">💬</div>
+        </div>
+      </button>
+
+      <button class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-left">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Fleet Reports</h3>
+            <p class="text-sm text-gray-600">View analytics</p>
+          </div>
+          <div class="text-3xl">📊</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Notifications Panel - AfterViewInit DOM Access -->
+    <div *ngIf="notifications.length > 0" class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="font-semibold text-yellow-800">Live Notifications</h4>
+        <button 
+          (click)="clearNotifications()"
+          class="text-yellow-600 hover:text-yellow-800 text-sm">
+          Clear All
+        </button>
+      </div>
+      <div class="space-y-2">
+        <div 
+          *ngFor="let notification of notifications" 
+          class="text-sm text-yellow-700 p-2 bg-yellow-100 rounded">
+          {{ notification }}
+        </div>
+      </div>
+      <p class="text-xs text-yellow-600 mt-2">Generated every 10 seconds via OnInit subscription</p>
+    </div>
+  </div>
+</div>

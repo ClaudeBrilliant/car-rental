@@ -1,0 +1,99 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-lg w-full text-center">
+    <div class="bg-white rounded-lg shadow-md p-8">
+      
+      <!-- Error Icon and Code -->
+      <div class="mb-6">
+        <div class="flex justify-center items-center space-x-4 mb-4">
+          <span class="text-6xl">{{ getErrorIcon() }}</span>
+          <span class="text-6xl font-bold" [class]="getErrorColorClass()">{{ errorType }}</span>
+        </div>
+        
+        <!-- Error SVG Icon -->
+        <svg *ngIf="errorType === '403'" class="mx-auto h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        
+        <svg *ngIf="errorType === '404'" class="mx-auto h-16 w-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      
+      <!-- Error Title and Message -->
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ errorTitle }}</h1>
+      <p class="text-gray-600 mb-6">{{ errorMessage }}</p>
+      
+      <!-- Route and User Info Panel -->
+      <div [class]="getBackgroundColorClass() + ' ' + getBorderColorClass()" class="border rounded-lg p-4 mb-6">
+        <h3 class="text-sm font-semibold mb-2" [class]="getErrorColorClass().replace('text-', 'text-').replace('-500', '-800')">
+          {{ errorType === '404' ? 'Route Guard Demo' : 'Role Guard Demo' }}
+        </h3>
+        <div class="text-xs space-y-1" [class]="getErrorColorClass().replace('-500', '-700')">
+          <p><strong>Attempted Route:</strong> <code class="bg-white px-1 rounded">{{ attemptedRoute || 'Unknown' }}</code></p>
+          <p><strong>Current User Role:</strong> <code class="bg-white px-1 rounded">{{ currentUserRole || 'Not Authenticated' }}</code></p>
+          <p *ngIf="errorType === '403'"><strong>Required Permission:</strong> Higher access level</p>
+          <p *ngIf="errorType === '404'"><strong>Route Status:</strong> Does not exist</p>
+          <p class="mt-2">{{ errorType === '404' ? 'Router navigation failed!' : 'Guards are working correctly!' }}</p>
+        </div>
+      </div>
+
+      <!-- Error-specific Content -->
+      <div *ngIf="errorType === '404'" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h4 class="text-sm font-semibold text-blue-800 mb-2"> Available Routes</h4>
+        <div class="text-xs text-blue-700 space-y-1">
+          <p>• <code>/dashboard</code> - Main dashboard</p>
+          <p>• <code>/bookings</code> - Booking management (Staff/Admin)</p>
+          <p>• <code>/rooms</code> - Room management (Staff/Admin)</p>
+          <p>• <code>/room-list</code> - View rooms (All users)</p>
+          <p>• <code>/login</code> - Authentication</p>
+        </div>
+      </div>
+
+      <div *ngIf="errorType === '403'" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <h4 class="text-sm font-semibold text-yellow-800 mb-2">Role Requirements</h4>
+        <div class="text-xs text-yellow-700 space-y-1">
+          <p><strong>GUEST:</strong> Dashboard, Room List, Guest Services</p>
+          <p><strong>STAFF:</strong> All Guest access + Bookings, Rooms</p>
+          <p><strong>ADMIN:</strong> Full system access</p>
+          <p class="mt-2">Current role <strong>{{ currentUserRole }}</strong> insufficient for this route</p>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <!-- Go Back Button -->
+        <button 
+          (click)="goBack()"
+          class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+          ⬅ Go Back
+        </button>
+        
+        <!-- Dashboard Button (if authenticated) -->
+        <button 
+          *ngIf="currentUserRole"
+          (click)="goToDashboard()"
+          class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+           Go to Dashboard
+        </button>
+        
+        <!-- Login Button (if not authenticated) -->
+        <button 
+          *ngIf="!currentUserRole"
+          (click)="goToLogin()"
+          class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+           Login to Access
+        </button>
+        
+        <!-- Logout Button (if authenticated) -->
+        <button 
+          *ngIf="currentUserRole"
+          (click)="logout()"
+          class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+           Logout
+        </button>
+      </div>
+
+
+    </div>
+  </div>
+</div>

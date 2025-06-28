@@ -1,0 +1,538 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Vehicle Booking Management</h1>
+          <p class="text-gray-600 mt-1">Manage vehicle rentals and fleet operations</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- HTTP Status Indicator -->
+          <div class="flex items-center space-x-2">
+            <div [class]="isLoading ? 'bg-yellow-500' : 'bg-green-500'" 
+                 class="w-3 h-3 rounded-full"></div>
+            <span class="text-sm text-gray-600">
+              {{ isLoading ? 'API Loading...' : 'Connected' }}
+            </span>
+          </div>
+          <!-- Loading Indicator -->
+          <div *ngIf="isLoading" class="flex items-center text-navy-600">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600 mr-2"></div>
+            <span class="text-sm">Loading...</span>
+          </div>
+          <!-- Refresh Button -->
+          <button 
+            (click)="refreshData()"
+            [disabled]="isLoading"
+            class="bg-navy-500 text-white px-4 py-2 rounded-lg hover:bg-navy-600 disabled:opacity-50 transition-colors">
+            <svg *ngIf="!isLoading" class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {{ isLoading ? 'Refreshing...' : 'Refresh Data' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTTP Error Display -->
+    <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center">
+        <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+        </svg>
+        <div class="flex-1">
+          <h3 class="text-sm font-medium text-red-800">HTTP Request Failed</h3>
+          <p class="text-sm text-red-700">{{ error }}</p>
+          <p class="text-xs text-red-600 mt-1">Error handled in OnInit lifecycle hook</p>
+        </div>
+        <button 
+          (click)="refreshData()"
+          class="ml-auto bg-red-100 text-red-800 px-3 py-1 rounded text-sm hover:bg-red-200 transition-colors">
+          Retry API Call
+        </button>
+      </div>
+    </div>
+
+    <!-- Today's Activities Dashboard - Real-time Data -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Today's Pickups -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Today's Vehicle Pickups</h3>
+          <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
+            {{ todaysPickups.length }} vehicles
+          </span>
+        </div>
+        
+        <!-- Loading State for Pickups -->
+        <div *ngIf="isLoadingPickups" class="space-y-3">
+          <div *ngFor="let i of [1,2,3]" class="animate-pulse">
+            <div class="flex items-center space-x-3 p-3">
+              <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pickups List -->
+        <div *ngIf="!isLoadingPickups" class="space-y-3 max-h-64 overflow-y-auto">
+          <div *ngFor="let pickup of todaysPickups" 
+               class="flex justify-between items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+                <span class="text-lg">{{ getVehicleIcon(pickup.vehicleType) }}</span>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">{{ pickup.customerName }}</p>
+                <p class="text-sm text-gray-600">{{ pickup.vehicleType | titlecase }} • {{ pickup.pickupDate | date:'shortTime' }}</p>
+                <p class="text-xs text-gray-500">{{ pickup.pickupLocation }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button 
+                *ngIf="canPickup(pickup)"
+                (click)="pickupVehicle(pickup)"
+                class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors">
+                Process Pickup
+              </button>
+              <span *ngIf="!canPickup(pickup)" 
+                    class="text-green-600 text-sm font-medium bg-green-100 px-3 py-1 rounded">
+                ✓ Picked Up
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State for Pickups -->
+        <div *ngIf="!isLoadingPickups && todaysPickups.length === 0" 
+             class="text-center py-8 text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4"/>
+          </svg>
+          <p>No vehicle pickups scheduled for today</p>
+          <p class="text-xs text-gray-400 mt-1">Data loaded via HTTP Client</p>
+        </div>
+      </div>
+
+      <!-- Today's Returns -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Today's Vehicle Returns</h3>
+          <span class="bg-navy-100 text-navy-800 text-xs font-semibold px-2 py-1 rounded-full">
+            {{ todaysReturns.length }} vehicles
+          </span>
+        </div>
+        
+        <!-- Loading State for Returns -->
+        <div *ngIf="isLoadingReturns" class="space-y-3">
+          <div *ngFor="let i of [1,2,3]" class="animate-pulse">
+            <div class="flex items-center space-x-3 p-3">
+              <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Returns List -->
+        <div *ngIf="!isLoadingReturns" class="space-y-3 max-h-64 overflow-y-auto">
+          <div *ngFor="let returnVehicle of todaysReturns" 
+               class="flex justify-between items-center p-3 bg-navy-50 rounded-lg hover:bg-navy-100 transition-colors">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-navy-200 rounded-full flex items-center justify-center">
+                <span class="text-lg">{{ getVehicleIcon(returnVehicle.vehicleType) }}</span>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">{{ returnVehicle.customerName }}</p>
+                <p class="text-sm text-gray-600">{{ returnVehicle.vehicleType | titlecase }} • {{ returnVehicle.returnDate | date:'shortTime' }}</p>
+                <p class="text-xs text-gray-500">{{ returnVehicle.pickupLocation }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button 
+                *ngIf="canReturn(returnVehicle)"
+                (click)="returnVehicle(returnVehicle)"
+                class="bg-navy-500 text-white px-3 py-1 rounded text-sm hover:bg-navy-600 transition-colors">
+                Process Return
+              </button>
+              <span *ngIf="!canReturn(returnVehicle)" 
+                    class="text-navy-600 text-sm font-medium bg-navy-100 px-3 py-1 rounded">
+                ✓ Returned
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State for Returns -->
+        <div *ngIf="!isLoadingReturns && todaysReturns.length === 0" 
+             class="text-center py-8 text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4"/>
+          </svg>
+          <p>No vehicle returns scheduled for today</p>
+          <p class="text-xs text-gray-400 mt-1">Data loaded via HTTP Client</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filter Section - Debounced HTTP Requests -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Search & Filter Vehicle Bookings</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Debounced Search Input -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Search Bookings
+            <span class="text-xs text-gray-500">(Debounced HTTP requests)</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="text"
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange($any($event.target).value)"
+              placeholder="Search by customer name, email, or vehicle..."
+              class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent">
+            <svg class="absolute left-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            Search triggers HTTP request after 300ms delay
+          </p>
+        </div>
+        
+        <!-- Status Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Status
+            <span class="text-xs text-gray-500">(Immediate HTTP request)</span>
+          </label>
+          <select 
+            [(ngModel)]="selectedStatus"
+            (change)="onStatusFilterChange()"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent">
+            <option *ngFor="let status of statusOptions" [value]="status.value">
+              {{ status.label }}
+            </option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">
+            Filter change triggers immediate API call
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Booking Form Toggle -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Create New Vehicle Booking</h3>
+        <button 
+          (click)="toggleNewBookingForm()"
+          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          {{ showNewBookingForm ? 'Cancel' : 'Add New Booking' }}
+        </button>
+      </div>
+
+      <!-- Reactive Form -->
+      <form *ngIf="showNewBookingForm" [formGroup]="bookingForm" (ngSubmit)="onSubmitNewBooking()" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Customer Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name</label>
+            <input 
+              type="text" 
+              formControlName="customerName"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500"
+              placeholder="Enter customer name">
+            <div *ngIf="getFieldError('customerName')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('customerName') }}
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input 
+              type="email" 
+              formControlName="email"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500"
+              placeholder="customer@email.com">
+            <div *ngIf="getFieldError('email')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('email') }}
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <input 
+              type="tel" 
+              formControlName="phone"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500"
+              placeholder="(555) 123-4567">
+            <div *ngIf="getFieldError('phone')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('phone') }}
+            </div>
+          </div>
+
+          <!-- License Number -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Driver's License</label>
+            <input 
+              type="text" 
+              formControlName="licenseNumber"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500"
+              placeholder="License number">
+            <div *ngIf="getFieldError('licenseNumber')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('licenseNumber') }}
+            </div>
+          </div>
+
+          <!-- Vehicle Type -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
+            <select 
+              formControlName="vehicleType"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500">
+              <option value="">Select vehicle type</option>
+              <option *ngFor="let vehicle of vehicleTypes" [value]="vehicle.value">
+                {{ vehicle.label }}
+              </option>
+            </select>
+            <div *ngIf="getFieldError('vehicleType')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('vehicleType') }}
+            </div>
+          </div>
+
+          <!-- Driver Age -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Driver Age</label>
+            <input 
+              type="number" 
+              formControlName="driverAge"
+              min="21" max="80"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500">
+            <div *ngIf="getFieldError('driverAge')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('driverAge') }}
+            </div>
+          </div>
+
+          <!-- Pickup Date -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
+            <input 
+              type="date" 
+              formControlName="pickupDate"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500">
+            <div *ngIf="getFieldError('pickupDate')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('pickupDate') }}
+            </div>
+          </div>
+
+          <!-- Return Date -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Return Date</label>
+            <input 
+              type="date" 
+              formControlName="returnDate"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500">
+            <div *ngIf="getFieldError('returnDate')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('returnDate') }}
+            </div>
+            <!-- Cross-field validation error -->
+            <div *ngIf="bookingForm.errors?.['invalidDateRange'] && bookingForm.touched" 
+                 class="text-red-500 text-sm mt-1">
+              Return date must be after pickup date
+            </div>
+          </div>
+
+          <!-- Pickup Location -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Location</label>
+            <input 
+              type="text" 
+              formControlName="pickupLocation"
+              class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-navy-500"
+              placeholder="Enter pickup location">
+            <div *ngIf="getFieldError('pickupLocation')" class="text-red-500 text-sm mt-1">
+              {{ getFieldError('pickupLocation') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Status Display -->
+        <div class="bg-gray-50 p-4 rounded">
+          <p class="text-sm text-gray-600 mb-2">
+            <strong>Form Status:</strong> 
+            <span [class]="bookingForm.valid ? 'text-green-600' : 'text-red-600'">
+              {{ bookingForm.valid ? 'Valid' : 'Invalid' }}
+            </span>
+          </p>
+          <p class="text-xs text-gray-500">
+            Pristine: {{ bookingForm.pristine }} | 
+            Dirty: {{ bookingForm.dirty }} | 
+            Touched: {{ bookingForm.touched }}
+          </p>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex space-x-4">
+          <button 
+            type="submit"
+            [disabled]="!bookingForm.valid"
+            class="bg-navy-500 text-white px-6 py-2 rounded hover:bg-navy-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            Create Vehicle Booking
+          </button>
+          <button 
+            type="button"
+            (click)="bookingForm.reset({ driverAge: 25 })"
+            class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
+            Reset Form
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Main Bookings Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-gray-800">
+            All Vehicle Bookings
+            <span class="text-sm font-normal text-gray-500">
+              ({{ totalBookings }} total • Page {{ currentPage }})
+            </span>
+          </h3>
+          <!-- HTTP Status Indicators -->
+          <div class="flex items-center space-x-4 text-xs text-gray-500">
+            <div class="flex items-center space-x-1">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>OnInit: Data loaded</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <div class="w-2 h-2 bg-navy-500 rounded-full"></div>
+              <span>OnDestroy: Cleanup ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Page Loading State -->
+      <div *ngIf="isLoading && bookings.length === 0" class="p-12 text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-navy-500 mx-auto mb-4"></div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Loading Vehicle Bookings</h3>
+        <p class="text-gray-600">Fetching data from API...</p>
+        <div class="mt-4 text-sm text-gray-500 space-y-1">
+          <p>• HTTP Client configured in OnInit</p>
+          <p>• Error handling implemented</p>
+          <p>• Subscriptions will be cleaned up in OnDestroy</p>
+        </div>
+      </div>
+
+      <!-- Bookings Table Content -->
+      <div *ngIf="!isLoading || bookings.length > 0" class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Information</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle & Dates</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let booking of bookings; trackBy: trackByBookingId" 
+                class="hover:bg-gray-50 transition-colors">
+              <!-- Customer Information -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center">
+                    <span class="text-navy-600 font-medium text-sm">
+                      {{ booking.customerName.charAt(0).toUpperCase() }}
+                    </span>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ booking.customerName }}</div>
+                    <div class="text-sm text-gray-500">{{ booking.email }}</div>
+                    <div class="text-xs text-gray-400">ID: #{{ booking.id }}</div>
+                  </div>
+                </div>
+              </td>
+              
+              <!-- Vehicle & Dates -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                  <div class="font-medium flex items-center">
+                    <span class="mr-2">{{ getVehicleIcon(booking.vehicleType) }}</span>
+                    {{ booking.vehicleType | titlecase }}
+                  </div>
+                  <div class="text-gray-500">
+                    {{ booking.pickupDate | date:'MMM d, y' }} → {{ booking.returnDate | date:'MMM d, y' }}
+                  </div>
+                  <div class="text-xs text-gray-400">{{ booking.pickupLocation }}</div>
+                </div>
+              </td>
+              
+              <!-- Status -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="getStatusBadgeClass(booking.status)"
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize">
+                  {{ booking.status.replace('-', ' ') }}
+                </span>
+              </td>
+              
+              <!-- Amount -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                  ${{ booking.totalAmount | number:'1.2-2' }}
+                </div>
+              </td>
+              
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                  <!-- Pickup Button -->
+                  <button 
+                    *ngIf="canPickup(booking)"
+                    (click)="pickupVehicle(booking)"
+                    class="text-green-600 hover:text-green-900 hover:bg-green-50 px-2 py-1 rounded transition-colors">
+                    Pickup
+                  </button>
+                  
+                  <!-- Return Button -->
+                  <button 
+                    *ngIf="canReturn(booking)"
+                    (click)="returnVehicle(booking)"
+                    class="text-navy-600 hover:text-navy-900 hover:bg-navy-50 px-2 py-1 rounded transition-colors">
+                    Return
+                  </button>
+                  
+                  <!-- Cancel Button -->
+                  <button 
+                    *ngIf="canCancel(booking)"
+                    (click)="cancelBooking(booking)"
+                    class="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded transition-colors">
+                    Cancel
+                  </button>
+                  
+                  <!-- Status Info (No Actions Available) -->
+                  <span *ngIf="!canPickup(booking) && !canReturn(booking) && !canCancel(booking)"
+                        class="text-gray-400 text-xs">
+                    No actions available
+                  </span>
+                </div>
+              </td>
+            </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
