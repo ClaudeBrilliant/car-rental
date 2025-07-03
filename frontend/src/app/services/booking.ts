@@ -1,18 +1,18 @@
 import { Injectable } from "@angular/core"
-import type { HttpClient } from "@angular/common/http"
-import type { Observable } from "rxjs"
-import { type Booking, type CreateBookingRequest, BookingStatus } from "../models/booking.model"
-import { environment } from "../../../environments/environment"
+import { HttpClient } from "@angular/common/http"
+import  { Observable } from "rxjs"
+import {  Booking, type BookingRequest, BookingStatus } from "../models/booking"
+
 
 @Injectable({
   providedIn: "root",
 })
 export class BookingService {
-  private readonly API_URL = `${environment.apiUrl}/bookings`
+  private readonly API_URL = `http://localhost:4200/bookings`
 
   constructor(private http: HttpClient) {}
 
-  createBooking(booking: CreateBookingRequest): Observable<Booking> {
+  createBooking(booking: BookingRequest): Observable<Booking> {
     return this.http.post<Booking>(this.API_URL, booking)
   }
 
@@ -37,7 +37,7 @@ export class BookingService {
   }
 
   approveBooking(id: string, notes?: string): Observable<Booking> {
-    return this.updateBookingStatus(id, BookingStatus.APPROVED, notes)
+    return this.updateBookingStatus(id, BookingStatus.CONFIRMED, notes)
   }
 
   rejectBooking(id: string, reason: string): Observable<Booking> {
