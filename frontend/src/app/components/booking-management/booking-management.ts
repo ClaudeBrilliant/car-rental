@@ -5,14 +5,50 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
-import { VehicleBookingService, VehicleBookingResponse, PaginatedResponse } from '../../services/vehicle-booking.service';
+// Define the interfaces that were missing
+interface VehicleBookingResponse {
+  id: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  licenseNumber: string;
+  pickupDate: string;
+  returnDate: string;
+  vehicleType: string;
+  driverAge: number;
+  pickupLocation: string;
+  status: 'pending' | 'confirmed' | 'picked-up' | 'returned' | 'cancelled';
+  totalCost?: number;
+  vehicleModel?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// Define the service interface
+interface BookingService {
+  getBookings(page: number, limit: number, status?: string): import('rxjs').Observable<PaginatedResponse<VehicleBookingResponse>>;
+  getTodaysPickups(): import('rxjs').Observable<VehicleBookingResponse[]>;
+  getTodaysReturns(): import('rxjs').Observable<VehicleBookingResponse[]>;
+  searchBookings(query: string): import('rxjs').Observable<VehicleBookingResponse[]>;
+  pickupVehicle(bookingId: string): import('rxjs').Observable<VehicleBookingResponse>;
+  returnVehicle(bookingId: string): import('rxjs').Observable<VehicleBookingResponse>;
+  cancelBooking(bookingId: string): import('rxjs').Observable<VehicleBookingResponse>;
+  createBooking(bookingData: any): import('rxjs').Observable<VehicleBookingResponse>;
+}
 
 @Component({
   selector: 'app-vehicle-booking-management',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './vehicle-booking-management.component.html',
-  styleUrl: './vehicle-booking-management.component.css'
+  templateUrl: './booking-management.component.html',
+  styleUrl: './booking-management.component.css'
 })
 export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
   // Reactive form properties
@@ -67,16 +103,19 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private vehicleBookingService: VehicleBookingService, 
+    private bookingService: BookingService, 
     private fb: FormBuilder
   ) {
     console.log('VehicleBookingManagement Constructor: Component instantiated');
-    console.log('Constructor: VehicleBookingService injected via DI');
+    console.log('Constructor: bookingService injected via DI');
   }
 
   // OnInit - HTTP Client setup and initial data loading
   ngOnInit(): void {
     console.log('OnInit: Setting up HTTP Client operations');
+    
+    // Create booking form first
+    this.createBookingForm();
     
     // Load initial data via HTTP
     this.loadBookings();
@@ -86,8 +125,6 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
     this.setupDebouncedSearch();
     
     console.log('OnInit: All HTTP subscriptions configured');
-
-    this.createBookingForm();
   }
 
   // OnDestroy - HTTP subscription cleanup
@@ -118,7 +155,7 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
     console.log('HTTP Request: Loading vehicle bookings with pagination');
     
     // Create HTTP subscription for bookings
-    const bookingsSubscription = this.vehicleBookingService.getBookings(this.currentPage, 10, this.selectedStatus)
+    const bookingsSubscription = this.bookingService.getBookings(this.currentPage, 10, this.selectedStatus)
       .pipe(
         catchError(error => {
           console.error('HTTP Error:', error.message);
@@ -152,7 +189,7 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
     
     // Load today's pickups
     this.isLoadingPickups = true;
-    const pickupsSubscription = this.vehicleBookingService.getTodaysPickups()
+    const pickupsSubscription = this.bookingService.getTodaysPickups()
       .pipe(
         catchError(error => {
           console.error('HTTP Error (Pickups):', error.message);
@@ -169,7 +206,7 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
 
     // Load today's returns
     this.isLoadingReturns = true;
-    const returnsSubscription = this.vehicleBookingService.getTodaysReturns()
+    const returnsSubscription = this.bookingService.getTodaysReturns()
       .pipe(
         catchError(error => {
           console.error('HTTP Error (Returns):', error.message);
@@ -201,10 +238,10 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
           
           if (!query.trim()) {
             // If search is empty, load regular bookings
-            return this.vehicleBookingService.getBookings(1, 10, this.selectedStatus);
+            return this.bookingService.getBookings(1, 10, this.selectedStatus);
           } else {
             // Search bookings
-            return this.vehicleBookingService.searchBookings(query)
+            return this.bookingService.searchBookings(query)
               .pipe(
                 // Transform search results to match expected format
                 switchMap(results => {
@@ -260,7 +297,7 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
   pickupVehicle(booking: VehicleBookingResponse): void {
     console.log('HTTP Request: Processing vehicle pickup', booking.id);
     
-    const pickupSubscription = this.vehicleBookingService.pickupVehicle(booking.id)
+    const pickupSubscription = this.bookingService.pickupVehicle(booking.id)
       .pipe(
         catchError(error => {
           console.error('Pickup HTTP Error:', error.message);
@@ -291,7 +328,7 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
   returnVehicle(booking: VehicleBookingResponse): void {
     console.log('HTTP Request: Processing vehicle return', booking.id);
     
-    const returnSubscription = this.vehicleBookingService.returnVehicle(booking.id)
+    const returnSubscription = this.bookingService.returnVehicle(booking.id)
       .pipe(
         catchError(error => {
           console.error('Return HTTP Error:', error.message);
@@ -322,7 +359,7 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
   cancelBooking(booking: VehicleBookingResponse): void {
     console.log('HTTP Request: Cancelling vehicle booking', booking.id);
     
-    const cancelSubscription = this.vehicleBookingService.cancelBooking(booking.id)
+    const cancelSubscription = this.bookingService.cancelBooking(booking.id)
       .pipe(
         catchError(error => {
           console.error('Cancel HTTP Error:', error.message);
@@ -429,6 +466,12 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
       if (field.errors['min']) return 'Minimum age is 21';
       if (field.errors['max']) return 'Maximum age is 80';
     }
+
+    // Check for form-level validators
+    if (this.bookingForm.errors?.['invalidDateRange'] && fieldName === 'returnDate') {
+      return 'Return date must be after pickup date';
+    }
+
     return null;
   }
 
@@ -442,11 +485,27 @@ export class VehicleBookingManagementComponent implements OnInit, OnDestroy {
     if (this.bookingForm.valid) {
       console.log('New Vehicle Booking:', this.bookingForm.value);
 
-      // Here you would typically call the service to create the booking
-      // this.vehicleBookingService.createBooking(this.bookingForm.value)
+      // Create the booking via service
+      const createSubscription = this.bookingService.createBooking(this.bookingForm.value)
+        .pipe(
+          catchError(error => {
+            console.error('Create Booking HTTP Error:', error.message);
+            this.error = 'Failed to create booking: ' + error.message;
+            return of(null);
+          })
+        )
+        .subscribe({
+          next: (newBooking: VehicleBookingResponse | null) => {
+            if (newBooking) {
+              console.log('HTTP Success: Booking created', newBooking.id);
+              this.showNewBookingForm = false;
+              this.bookingForm.reset({ driverAge: 25 });
+              this.loadBookings(); // Refresh the bookings list
+            }
+          }
+        });
 
-      this.showNewBookingForm = false;
-      this.bookingForm.reset({ driverAge: 25 });
+      this.subscriptions.add(createSubscription);
     } else {
       this.markFormGroupTouched();
     }
