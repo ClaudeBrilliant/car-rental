@@ -1,3 +1,6 @@
+import { Vehicle } from "../components/vehicle/vehicle";
+import { User } from "../services/auth/auth";
+
 export interface Booking {
   id: string;
   userId: string;
@@ -8,7 +11,6 @@ export interface Booking {
   returnLocation: string;
   status: BookingStatus;
   totalAmount: number;
-  paymentStatus: PaymentStatus;
   additionalServices: AdditionalService[];
   notes?: string;
   createdAt: Date;
