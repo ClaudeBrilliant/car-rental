@@ -1,0 +1,75 @@
+### Audit Logs API Routes
+
+# Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Create Audit Log
+POST {{baseUrl}}/audit-logs
+Content-Type: {{contentType}}
+
+{
+  "userId": "user123",
+  "action": "CREATE",
+  "resource": "User",
+  "resourceId": "resource456",
+  "details": "Created new user account",
+  "ipAddress": "192.168.1.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+}
+
+### Get All Audit Logs
+GET {{baseUrl}}/audit-logs
+Content-Type: {{contentType}}
+
+### Get Audit Log by ID
+GET {{baseUrl}}/audit-logs/507f1f77bcf86cd799439011
+Content-Type: {{contentType}}
+
+### Delete Audit Log by ID
+DELETE {{baseUrl}}/audit-logs/507f1f77bcf86cd799439011
+Content-Type: {{contentType}}
+
+### Additional Test Cases
+
+# Create Audit Log - Update Action
+POST {{baseUrl}}/audit-logs
+Content-Type: {{contentType}}
+
+{
+  "userId": "user456",
+  "action": "UPDATE",
+  "resource": "Profile",
+  "resourceId": "profile789",
+  "details": "Updated user profile information",
+  "ipAddress": "192.168.1.2",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+}
+
+# Create Audit Log - Delete Action
+POST {{baseUrl}}/audit-logs
+Content-Type: {{contentType}}
+
+{
+  "userId": "admin001",
+  "action": "DELETE",
+  "resource": "Document",
+  "resourceId": "doc123",
+  "details": "Deleted sensitive document",
+  "ipAddress": "10.0.0.5",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+}
+
+# Create Audit Log - Login Action
+POST {{baseUrl}}/audit-logs
+Content-Type: {{contentType}}
+
+{
+  "userId": "user789",
+  "action": "LOGIN",
+  "resource": "Authentication",
+  "resourceId": "session456",
+  "details": "User logged in successfully",
+  "ipAddress": "203.0.113.1",
+  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15"
+}
